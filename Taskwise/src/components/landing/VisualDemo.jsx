@@ -66,7 +66,7 @@ const VisualDemo = () => {
           </div>
           {/* Arrow */}
           <div className={`flex justify-center transition-all duration-700 ${showArrow ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-pulse">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-pulse rotate-90 md:rotate-0 transform transition-transform">
               <span className="material-symbols-outlined">arrow_forward</span>
             </div>
           </div>

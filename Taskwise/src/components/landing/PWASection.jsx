@@ -3,8 +3,10 @@ import React from 'react';
 const PWASection = () => {
   return (
     <section className="relative pt-10 pb-20" id="pwa">
-      {/* Full width slanted container */}
-      <div className="absolute inset-0 w-full h-full bg-surface-dark/30" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 85%)' }}></div>
+      {/* Full width slanted container - Hidden on mobile */}
+      <div className="hidden lg:block absolute inset-0 w-full h-full bg-surface-dark/30" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 85%)' }}></div>
+      {/* Mobile background - Straight */}
+      <div className="block lg:hidden absolute inset-0 w-full h-full bg-surface-dark/30"></div>
       
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10 pt-12 pb-12">
         <div className="rounded-3xl bg-surface-dark border border-surface-border p-8 lg:p-16 flex flex-col lg:flex-row gap-12 items-center">
@@ -37,7 +39,7 @@ const PWASection = () => {
             </button>
           </div>
           <div className="flex-1 w-full max-w-md lg:max-w-full">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-surface-border group h-full min-h-[400px] flex items-center justify-center bg-gray-900">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-surface-border group h-full min-h-[300px] lg:min-h-[400px] flex items-center justify-center bg-gray-900">
               {/* Spotlight Effect */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-gray-900 to-gray-900"></div>
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-primary/10 to-transparent opacity-50"></div>
@@ -49,7 +51,7 @@ const PWASection = () => {
                   <img 
                     src="/Taskwise-icon.png" 
                     alt="Taskwise App Icon" 
-                    className="relative z-10 w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(30,201,210,0.6)] transform group-hover:scale-110 transition-transform duration-500" 
+                    className="relative z-10 w-24 h-24 lg:w-32 lg:h-32 object-contain drop-shadow-[0_0_30px_rgba(30,201,210,0.6)] transform group-hover:scale-110 transition-transform duration-500" 
                   />
                 </div>
               </div>

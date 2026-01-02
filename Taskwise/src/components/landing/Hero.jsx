@@ -36,22 +36,15 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative pt-2 pb-6 lg:pt-8 lg:pb-8 overflow-hidden">
+    <section className="relative pt-20 pb-6 lg:pt-8 lg:pb-8 overflow-hidden">
       {/* Background Decoration */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
         <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]"></div>
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px]"></div>
       </div>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
           <div className="flex flex-col gap-6 text-center lg:text-left">
-            <div className="animate-fade-in-up inline-flex items-center gap-2 rounded-full border border-surface-border bg-surface-dark px-3 py-1 text-xs font-medium text-primary w-fit mx-auto lg:mx-0">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-              v2.0 is now live
-            </div>
             <h1 className="animate-fade-in-up delay-100 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-white">
               Organize Life at the <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Speed of Thought</span>
             </h1>
@@ -67,7 +60,7 @@ const Hero = () => {
                 Open Web App
               </button>
             </div>
-            <div className="animate-fade-in-up delay-300 pt-6 flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-500">
+            <div className="animate-fade-in-up delay-300 pt-6 hidden lg:flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-500">
               <div className="flex -space-x-2">
                 <div className="h-8 w-8 rounded-full border-2 border-background-dark bg-gray-600 bg-cover bg-center" data-alt="User avatar 1" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA41xEzDz6acvRVYDwe8xOx3GZPgSTK59AJ6V0YBDeIuFAWaQpUgqO0cSQy_ABxmKa6lCe09n0qZQI2Ug5-4H_Jc8NNvQY_pO_tk3kfmST-EUT1nhKqssKIlLNkx95anZ1rN0xVsA9UXOI0MyevTgvS9kPFobNXV-ZecjuExlXp4OfxqqDZVt3Lgzw_sntWGuvecwcam_A65zRZCa_hnp1yonyuoQJSyAFpL7JFu3AaNtbostxyjRm0wK1jz37jdtKG9re0oeyGxd1R')" }}></div>
                 <div className="h-8 w-8 rounded-full border-2 border-background-dark bg-gray-600 bg-cover bg-center" data-alt="User avatar 2" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBQOS9jk9yr0XpK7_Eln3Mq3JMHr1tmyQNofFxt0FBQ-wPWTlSP4Mi2gH-YD7SeoPa2VYLONdTTuuzeRimoAUA-JMdDLX7exEpFSt3RAWDmLgAuSOfHP8T0QHdsNlE-PLkxc7XF_eApNRNJ2hCoeifMeZXHTd34wcXxkrICuUIpVGtBGI72hSnBqOZNdteqx9diYXFx2yqStPXsruMumrMm6fUki5Q3Q1cMx8Jg6pOfl49sC-etT6CUqTf-d9tSt8V4jTZ2F_UlVf3l')" }}></div>
@@ -77,8 +70,8 @@ const Hero = () => {
             </div>
           </div>
           {/* Hero Visual / Mockup */}
-          <div className="animate-fade-in-right delay-200 relative lg:h-[600px] flex items-center justify-center">
-            <div className="relative w-[300px] h-[600px] border-8 border-gray-900 rounded-[3rem] bg-gray-900 shadow-2xl overflow-hidden z-20 mx-auto transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
+          <div className="animate-fade-in-right delay-200 relative lg:h-[600px] flex items-center justify-center mt-8 lg:mt-0">
+            <div className="relative w-full max-w-[300px] h-[600px] border-8 border-gray-900 rounded-[3rem] bg-gray-900 shadow-2xl overflow-hidden z-20 mx-auto transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
               {/* Screen Content */}
               <div className="w-full h-full bg-surface-dark flex flex-col relative">
                 <div className="absolute top-0 inset-x-0 h-6 bg-black z-30 rounded-b-xl mx-10"></div>
@@ -128,6 +121,16 @@ const Hero = () => {
             </div>
             {/* Background Glow behind phone */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[500px] bg-gradient-to-tr from-primary/20 to-purple-500/20 rounded-full blur-[60px] -z-10"></div>
+          </div>
+          
+          {/* Mobile Only: Trusted By Section (Moved after Visual Demo) */}
+          <div className="animate-fade-in-up delay-300 pt-6 flex lg:hidden items-center justify-center gap-4 text-sm text-gray-500">
+            <div className="flex -space-x-2">
+              <div className="h-8 w-8 rounded-full border-2 border-background-dark bg-gray-600 bg-cover bg-center" data-alt="User avatar 1" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuA41xEzDz6acvRVYDwe8xOx3GZPgSTK59AJ6V0YBDeIuFAWaQpUgqO0cSQy_ABxmKa6lCe09n0qZQI2Ug5-4H_Jc8NNvQY_pO_tk3kfmST-EUT1nhKqssKIlLNkx95anZ1rN0xVsA9UXOI0MyevTgvS9kPFobNXV-ZecjuExlXp4OfxqqDZVt3Lgzw_sntWGuvecwcam_A65zRZCa_hnp1yonyuoQJSyAFpL7JFu3AaNtbostxyjRm0wK1jz37jdtKG9re0oeyGxd1R')" }}></div>
+              <div className="h-8 w-8 rounded-full border-2 border-background-dark bg-gray-600 bg-cover bg-center" data-alt="User avatar 2" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBQOS9jk9yr0XpK7_Eln3Mq3JMHr1tmyQNofFxt0FBQ-wPWTlSP4Mi2gH-YD7SeoPa2VYLONdTTuuzeRimoAUA-JMdDLX7exEpFSt3RAWDmLgAuSOfHP8T0QHdsNlE-PLkxc7XF_eApNRNJ2hCoeifMeZXHTd34wcXxkrICuUIpVGtBGI72hSnBqOZNdteqx9diYXFx2yqStPXsruMumrMm6fUki5Q3Q1cMx8Jg6pOfl49sC-etT6CUqTf-d9tSt8V4jTZ2F_UlVf3l')" }}></div>
+              <div className="h-8 w-8 rounded-full border-2 border-background-dark bg-gray-600 bg-cover bg-center" data-alt="User avatar 3" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBfop7nr9xZ1OfGEU-QGXaS-AIw1ShumHhg6oeo-XbyWlRz9izV0gsTiY3SYn9JxLUWCWEDU9JGgsgBkWLWJUKMmuIiaGLrmu0y-3h51dDgCyTOSQU5-bg_QS9VdN8yPYlAdOXD8xnq-WFmZ0U3CUFnPjWjtY5qD7FuELJvqGGA5JgIpkijDt24oxdbJisHDi5UKGCgdeLf8F7o9dw9VERfWQ5ZVBAg0OgBDDFc-CmKzg64fkzcKfwLCUlKS-oi3w6VxBgVy7y8KFxo')" }}></div>
+            </div>
+            <p>Trusted by 10,000+ planners</p>
           </div>
         </div>
       </div>
