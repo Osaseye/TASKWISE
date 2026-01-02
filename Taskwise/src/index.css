@@ -1,0 +1,46 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: theme('colors.background-dark');
+    color: white;
+  }
+}
+
+/* Custom scrollbar for horizontal scrolling sections */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+  
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
