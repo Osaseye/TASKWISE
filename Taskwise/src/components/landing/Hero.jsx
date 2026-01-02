@@ -77,7 +77,7 @@ const Hero = () => {
             </div>
           </div>
           {/* Hero Visual / Mockup */}
-          <div className="relative lg:h-[600px] flex items-center justify-center">
+          <div className="animate-fade-in-right delay-200 relative lg:h-[600px] flex items-center justify-center">
             <div className="relative w-[300px] h-[600px] border-8 border-gray-900 rounded-[3rem] bg-gray-900 shadow-2xl overflow-hidden z-20 mx-auto transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
               {/* Screen Content */}
               <div className="w-full h-full bg-surface-dark flex flex-col relative">
