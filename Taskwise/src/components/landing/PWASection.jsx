@@ -2,9 +2,11 @@ import React from 'react';
 
 const PWASection = () => {
   return (
-    <section className="py-24 relative overflow-hidden" id="pwa">
-      <div className="absolute inset-0 bg-surface-dark/50 skew-y-3 transform origin-bottom-right scale-110 -z-10"></div>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="relative pt-10 pb-20" id="pwa">
+      {/* Full width slanted container */}
+      <div className="absolute inset-0 w-full h-full bg-surface-dark/30" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 85%)' }}></div>
+      
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10 pt-12 pb-12">
         <div className="rounded-3xl bg-surface-dark border border-surface-border p-8 lg:p-16 flex flex-col lg:flex-row gap-12 items-center">
           <div className="flex-1 space-y-8">
             <div>
@@ -18,7 +20,7 @@ const PWASection = () => {
               <div className="flex items-center gap-4 p-4 rounded-xl bg-background-dark border border-surface-border w-full sm:w-auto">
                 <span className="material-symbols-outlined text-primary text-3xl">offline_bolt</span>
                 <div>
-                  <h4 className="font-bold text-white">Offline Mode</h4>
+                  <h4 className="font-bold text-white">Offline Mode</h4>    
                   <p className="text-xs text-gray-500">Works without internet</p>
                 </div>
               </div>
@@ -35,10 +37,23 @@ const PWASection = () => {
             </button>
           </div>
           <div className="flex-1 w-full max-w-md lg:max-w-full">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-surface-border group">
-              <div className="absolute inset-0 bg-gradient-to-t from-background-dark to-transparent opacity-60 z-10"></div>
-              {/* Abstract PWA representation */}
-              <div className="w-full bg-center bg-cover bg-no-repeat aspect-video" data-alt="Abstract gradient illustration representing web app installation" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDYaMtXJM-6zb6W2hBhF3grxwE6m6VXwjMR4269i5PTlmtt9oZpMMH3EneezqyyAeh27Cx4Z8jz_HVvM6BlFbREeuXVqOsRoEh7G0M8gDopCthOYAXOPo9KbCkZX0f-vmrappJXHeq_7-_tIirULaGUqG4xd4paYL-TaDR5yN-tCVF1MdHryfiHeySUGDNPNUy21QEVtSqccOAT4AGNvQmIEPtWpCvxQU87Kv_07dDFg-daYXHwIuCccVwJ-RBxKBnLvf0ALZUIH1TL")' }}></div>
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-surface-border group h-full min-h-[400px] flex items-center justify-center bg-gray-900">
+              {/* Spotlight Effect */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-gray-900 to-gray-900"></div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-primary/10 to-transparent opacity-50"></div>
+              
+              {/* App Icon with Glow */}
+              <div className="relative z-10 flex flex-col items-center justify-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/30 blur-3xl rounded-full"></div>
+                  <img 
+                    src="/Taskwise-icon.png" 
+                    alt="Taskwise App Icon" 
+                    className="relative z-10 w-32 h-32 object-contain drop-shadow-[0_0_30px_rgba(30,201,210,0.6)] transform group-hover:scale-110 transition-transform duration-500" 
+                  />
+                </div>
+              </div>
+
               <div className="absolute bottom-6 left-6 z-20">
                 <div className="bg-background-dark/90 backdrop-blur border border-surface-border rounded-lg p-4 flex items-center gap-4 max-w-xs shadow-xl transform group-hover:scale-105 transition-transform">
                   <div className="h-10 w-10 bg-primary rounded-md flex items-center justify-center">
