@@ -1,8 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const VisualDemo = () => {
+  const [text, setText] = useState('');
+  const [showArrow, setShowArrow] = useState(false);
+  const [showTasks, setShowTasks] = useState({ task1: false, task2: false });
+  const sectionRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  const fullText = "Remind me to buy groceries for the party tomorrow at 5pm and email Sarah about the project deadline next Monday";
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (isVisible && text.length < fullText.length) {
+      const timeout = setTimeout(() => {
+        setText(fullText.slice(0, text.length + 1));
+      }, 30);
+      return () => clearTimeout(timeout);
+    } else if (isVisible && text.length === fullText.length) {
+      // Animation sequence after typing
+      const sequence = async () => {
+        await new Promise(r => setTimeout(r, 500));
+        setShowArrow(true);
+        await new Promise(r => setTimeout(r, 500));
+        setShowTasks(prev => ({ ...prev, task1: true }));
+        await new Promise(r => setTimeout(r, 800));
+        setShowTasks(prev => ({ ...prev, task2: true }));
+      };
+      sequence();
+    }
+  }, [isVisible, text]);
+
   return (
-    <section className="py-20 bg-surface-dark border-y border-surface-border">
+    <section ref={sectionRef} className="py-20 bg-surface-dark border-y border-surface-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">From Chaos to Clarity</h2>
@@ -10,24 +55,24 @@ const VisualDemo = () => {
         </div>
         <div className="grid md:grid-cols-[1fr,auto,1fr] gap-8 items-center max-w-5xl mx-auto">
           {/* Input State */}
-          <div className="rounded-2xl bg-background-dark p-6 border border-surface-border shadow-lg relative group">
+          <div className="rounded-2xl bg-background-dark p-6 border border-surface-border shadow-lg relative group min-h-[180px]">
             <div className="absolute -top-3 -left-3 h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center border-4 border-surface-dark">
               <span className="material-symbols-outlined text-gray-300 text-sm">mic</span>
             </div>
             <p className="font-mono text-sm text-gray-400 mb-2">You say:</p>
             <div className="text-lg text-white font-medium italic">
-              "Remind me to buy groceries for the party tomorrow at 5pm and email Sarah about the project deadline next Monday"
+              "{text}<span className="animate-pulse text-primary">|</span>"
             </div>
           </div>
           {/* Arrow */}
-          <div className="flex justify-center">
+          <div className={`flex justify-center transition-all duration-700 ${showArrow ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-pulse">
               <span className="material-symbols-outlined">arrow_forward</span>
             </div>
           </div>
           {/* Output State */}
           <div className="flex flex-col gap-3">
-            <div className="rounded-xl bg-background-dark p-4 border-l-4 border-primary shadow-lg flex items-center gap-4">
+            <div className={`rounded-xl bg-background-dark p-4 border-l-4 border-primary shadow-lg flex items-center gap-4 transition-all duration-700 transform ${showTasks.task1 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
                 <span className="material-symbols-outlined">shopping_cart</span>
               </div>
@@ -36,7 +81,7 @@ const VisualDemo = () => {
                 <p className="text-xs text-gray-400">Tomorrow, 5:00 PM • Shopping</p>
               </div>
             </div>
-            <div className="rounded-xl bg-background-dark p-4 border-l-4 border-blue-500 shadow-lg flex items-center gap-4">
+            <div className={`rounded-xl bg-background-dark p-4 border-l-4 border-blue-500 shadow-lg flex items-center gap-4 transition-all duration-700 transform ${showTasks.task2 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
               <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0">
                 <span className="material-symbols-outlined">mail</span>
               </div>
