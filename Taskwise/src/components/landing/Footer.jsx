@@ -7,29 +7,19 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-primary">auto_awesome</span>
+              <img src="/Taskwise-icon.png" alt="Taskwise Logo" className="h-6 w-6" />
               <span className="text-lg font-bold text-white">TASKWISE</span>
             </div>
             <p className="text-sm text-gray-400">
               The intelligent planner for busy people.
-              <br />Designed in California.
             </p>
           </div>
           <div>
             <h4 className="text-white font-bold mb-4">Product</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><a className="hover:text-primary transition-colors" href="#">Features</a></li>
-              <li><a className="hover:text-primary transition-colors" href="#">Pricing</a></li>
               <li><a className="hover:text-primary transition-colors" href="#">Download</a></li>
               <li><a className="hover:text-primary transition-colors" href="#">Changelog</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-bold mb-4">Company</h4>
-            <ul className="space-y-2 text-sm text-gray-400">
-              <li><a className="hover:text-primary transition-colors" href="#">About</a></li>
-              <li><a className="hover:text-primary transition-colors" href="#">Blog</a></li>
-              <li><a className="hover:text-primary transition-colors" href="#">Careers</a></li>
               <li><a className="hover:text-primary transition-colors" href="#">Contact</a></li>
             </ul>
           </div>
@@ -42,7 +32,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="border-t border-surface-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-500">© 2023 Taskwise Inc. All rights reserved.</p>
+          <p className="text-sm text-gray-500">© 2026 Taskwise Inc. All rights reserved.</p>
           <div className="flex gap-4">
             <a className="text-gray-500 hover:text-white transition-colors" href="#">
               <span className="sr-only">Twitter</span>
