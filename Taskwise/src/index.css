@@ -69,7 +69,7 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: theme('colors.surface-border');
+  background-color: theme('colors.border-dark');
   border-radius: 9999px;
 }
 
@@ -77,3 +77,8 @@
   background-color: theme('colors.text-secondary');
 }
 
+
+.bg-grid-pattern {
+  background-image: radial-gradient(#293738 1px, transparent 1px);
+  background-size: 20px 20px;
+}

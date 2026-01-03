@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
+import { useUI } from '../../context/UIContext';
 
 const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isSidebarCollapsed, toggleSidebar } = useUI();
   const location = useLocation();
 
   const navItems = [
     { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },
     { icon: 'calendar_month', label: 'Calendar', path: '/calendar' },
     { icon: 'check_circle', label: 'My Tasks', path: '/tasks' },
-    { icon: 'view_kanban', label: 'Projects', path: '/projects' },
     { icon: 'bar_chart', label: 'Analytics', path: '/analytics' },
-    { icon: 'smart_toy', label: 'AI Insights', path: '/ai-insights' },
+    { icon: 'settings', label: 'Settings', path: '/settings' },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -20,14 +20,14 @@ const Sidebar = () => {
   return (
     <motion.aside 
       initial={{ width: "16rem" }}
-      animate={{ width: isCollapsed ? "5rem" : "16rem" }}
+      animate={{ width: isSidebarCollapsed ? "5rem" : "16rem" }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="h-full flex flex-col border-r border-[#293738] bg-[#111717] hidden md:flex shrink-0 z-20 overflow-hidden"
     >
-      <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} relative`}>
+      <div className={`p-6 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} relative`}>
         <div className="flex items-center gap-2">
           <img src="/Taskwise-icon.png" alt="Taskwise" className="w-8 h-8 object-contain" />
-          {!isCollapsed && (
+          {!isSidebarCollapsed && (
             <motion.h1 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -39,9 +39,9 @@ const Sidebar = () => {
           )}
         </div>
         
-        {!isCollapsed && (
+        {!isSidebarCollapsed && (
           <button 
-            onClick={() => setIsCollapsed(true)}
+            onClick={toggleSidebar}
             className="text-text-secondary hover:text-white transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">menu_open</span>
@@ -50,9 +50,9 @@ const Sidebar = () => {
       </div>
 
       {/* Collapsed State Toggle Button (Centered when collapsed) */}
-      {isCollapsed && (
+      {isSidebarCollapsed && (
         <button 
-          onClick={() => setIsCollapsed(false)}
+          onClick={toggleSidebar}
           className="mx-auto mb-4 text-text-secondary hover:text-white transition-colors"
         >
           <span className="material-symbols-outlined text-[20px]">menu</span>
@@ -69,11 +69,11 @@ const Sidebar = () => {
                 isActive(item.path)
                 ? 'bg-primary/10 text-primary' 
                 : 'text-text-secondary hover:bg-[#293738] hover:text-white'
-              } ${isCollapsed ? 'justify-center' : ''}`}
-              title={isCollapsed ? item.label : ''}
+              } ${isSidebarCollapsed ? 'justify-center' : ''}`}
+              title={isSidebarCollapsed ? item.label : ''}
             >
               <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-              {!isCollapsed && (
+              {!isSidebarCollapsed && (
                 <motion.span 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -88,9 +88,9 @@ const Sidebar = () => {
       </div>
 
       <div className="p-4 border-t border-[#293738]">
-        <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#293738] cursor-pointer transition-colors ${isCollapsed ? 'justify-center' : ''}`}>
+        <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#293738] cursor-pointer transition-colors ${isSidebarCollapsed ? 'justify-center' : ''}`}>
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-blue to-primary flex items-center justify-center text-white text-xs font-bold border border-white/10 shrink-0">AL</div>
-          {!isCollapsed && (
+          {!isSidebarCollapsed && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -99,7 +99,7 @@ const Sidebar = () => {
               <p className="text-white text-sm font-medium leading-none truncate">Alex Doe</p>
             </motion.div>
           )}
-          {!isCollapsed && <span className="material-symbols-outlined text-text-secondary ml-auto text-[18px]">settings</span>}
+          {!isSidebarCollapsed && <span className="material-symbols-outlined text-text-secondary ml-auto text-[18px]">settings</span>}
         </div>
       </div>
     </motion.aside>

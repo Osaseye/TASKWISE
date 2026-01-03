@@ -12,9 +12,14 @@ export const useUI = () => {
 
 export const UIProvider = ({ children }) => {
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const toggleAIAssistant = () => {
     setIsAIAssistantOpen(prev => !prev);
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(prev => !prev);
   };
 
   const openAIAssistant = () => setIsAIAssistantOpen(true);
@@ -25,7 +30,10 @@ export const UIProvider = ({ children }) => {
       isAIAssistantOpen, 
       toggleAIAssistant, 
       openAIAssistant, 
-      closeAIAssistant 
+      closeAIAssistant,
+      isSidebarCollapsed,
+      toggleSidebar,
+      setIsSidebarCollapsed
     }}>
       {children}
     </UIContext.Provider>

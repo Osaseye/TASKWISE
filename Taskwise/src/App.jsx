@@ -13,6 +13,9 @@ import OnboardingStep4 from './pages/onboarding/OnboardingStep4';
 import DashboardPage from './pages/DashboardPage';
 import CalendarPage from './pages/CalendarPage';
 import MyTasksPage from './pages/MyTasksPage';
+import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
+import AnalyticsPage from './pages/AnalyticsPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -31,6 +34,9 @@ const AnimatedRoutes = () => {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/tasks" element={<MyTasksPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
       </Routes>
     </AnimatePresence>
   );
