@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -23,10 +24,10 @@ const Navbar = () => {
           <span className="text-lg font-bold tracking-tight text-white">TASKWISE</span>
         </div>
         <div className="flex items-center gap-4">
-          <button className="hidden md:block text-sm font-medium text-white hover:text-primary transition-colors">Log In</button>
-          <button className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-background-dark transition-all hover:bg-primary-dark hover:shadow-[0_0_20px_-5px_rgba(30,201,210,0.5)]">
+          <Link to="/login" className="hidden md:block text-sm font-medium text-white hover:text-primary transition-colors">Log In</Link>
+          <Link to="/register" className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-background-dark transition-all hover:bg-primary-dark hover:shadow-[0_0_20px_-5px_rgba(30,201,210,0.5)]">
             Get Started
-          </button>
+          </Link>
         </div>
       </div>
     </header>

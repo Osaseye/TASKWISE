@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdOfflineBolt, MdDevices, MdAddToHomeScreen } from 'react-icons/md';
 
 const PWASection = () => {
   return (
@@ -20,14 +21,14 @@ const PWASection = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex items-center gap-4 p-4 rounded-xl bg-background-dark border border-surface-border w-full sm:w-auto">
-                <span className="material-symbols-outlined text-primary text-3xl">offline_bolt</span>
+                <MdOfflineBolt className="text-primary text-3xl" />
                 <div>
                   <h4 className="font-bold text-white">Offline Mode</h4>    
                   <p className="text-xs text-gray-500">Works without internet</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 p-4 rounded-xl bg-background-dark border border-surface-border w-full sm:w-auto">
-                <span className="material-symbols-outlined text-primary text-3xl">devices</span>
+                <MdDevices className="text-primary text-3xl" />
                 <div>
                   <h4 className="font-bold text-white">Cross Platform</h4>
                   <p className="text-xs text-gray-500">iOS, Android, Desktop</p>
@@ -59,7 +60,7 @@ const PWASection = () => {
               <div className="absolute bottom-6 left-6 z-20">
                 <div className="bg-background-dark/90 backdrop-blur border border-surface-border rounded-lg p-4 flex items-center gap-4 max-w-xs shadow-xl transform group-hover:scale-105 transition-transform">
                   <div className="h-10 w-10 bg-primary rounded-md flex items-center justify-center">
-                    <span className="material-symbols-outlined text-background-dark">add_to_home_screen</span>
+                    <MdAddToHomeScreen className="text-background-dark" />
                   </div>
                   <div>
                     <p className="text-white font-bold text-sm">Add to Home Screen</p>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { MdMic, MdArrowForward, MdShoppingCart, MdMail } from 'react-icons/md';
 
 const VisualDemo = () => {
   const [text, setText] = useState('');
@@ -57,7 +58,7 @@ const VisualDemo = () => {
           {/* Input State */}
           <div className="rounded-2xl bg-background-dark p-6 border border-surface-border shadow-lg relative group min-h-[180px]">
             <div className="absolute -top-3 -left-3 h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center border-4 border-surface-dark">
-              <span className="material-symbols-outlined text-gray-300 text-sm">mic</span>
+              <MdMic className="text-gray-300 text-sm" />
             </div>
             <p className="font-mono text-sm text-gray-400 mb-2">You say:</p>
             <div className="text-lg text-white font-medium italic">
@@ -67,14 +68,14 @@ const VisualDemo = () => {
           {/* Arrow */}
           <div className={`flex justify-center transition-all duration-700 ${showArrow ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-pulse rotate-90 md:rotate-0 transform transition-transform">
-              <span className="material-symbols-outlined">arrow_forward</span>
+              <MdArrowForward />
             </div>
           </div>
           {/* Output State */}
           <div className="flex flex-col gap-3">
             <div className={`rounded-xl bg-background-dark p-4 border-l-4 border-primary shadow-lg flex items-center gap-4 transition-all duration-700 transform ${showTasks.task1 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
-                <span className="material-symbols-outlined">shopping_cart</span>
+                <MdShoppingCart />
               </div>
               <div>
                 <h4 className="text-white font-bold text-sm">Buy Groceries</h4>
@@ -83,7 +84,7 @@ const VisualDemo = () => {
             </div>
             <div className={`rounded-xl bg-background-dark p-4 border-l-4 border-blue-500 shadow-lg flex items-center gap-4 transition-all duration-700 transform ${showTasks.task2 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
               <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0">
-                <span className="material-symbols-outlined">mail</span>
+                <MdMail />
               </div>
               <div>
                 <h4 className="text-white font-bold text-sm">Email Sarah</h4>

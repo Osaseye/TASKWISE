@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdCalendarMonth, MdSmartToy, MdDarkMode } from 'react-icons/md';
 
 const MobileShowcase = () => {
   return (
@@ -18,7 +19,7 @@ const MobileShowcase = () => {
               </div>
               <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-background-dark to-transparent">
                 <span className="h-10 w-10 rounded-full bg-primary flex items-center justify-center mb-2 shadow-lg">
-                  <span className="material-symbols-outlined text-background-dark">calendar_month</span>
+                  <MdCalendarMonth className="text-background-dark" />
                 </span>
               </div>
             </div>
@@ -35,7 +36,7 @@ const MobileShowcase = () => {
               </div>
               <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-background-dark to-transparent">
                 <span className="h-10 w-10 rounded-full bg-primary flex items-center justify-center mb-2 shadow-lg">
-                  <span className="material-symbols-outlined text-background-dark">smart_toy</span>
+                  <MdSmartToy className="text-background-dark" />
                 </span>
               </div>
             </div>
@@ -52,7 +53,7 @@ const MobileShowcase = () => {
               </div>
               <div className="absolute bottom-0 inset-x-0 p-6 bg-gradient-to-t from-background-dark to-transparent">
                 <span className="h-10 w-10 rounded-full bg-primary flex items-center justify-center mb-2 shadow-lg">
-                  <span className="material-symbols-outlined text-background-dark">dark_mode</span>
+                  <MdDarkMode className="text-background-dark" />
                 </span>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { MdGraphicEq, MdChat, MdInsights } from 'react-icons/md';
 
 const Features = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -34,7 +35,7 @@ const Features = () => {
           {/* Feature 1 */}
           <div className={`group relative overflow-hidden rounded-2xl border border-surface-border bg-surface-dark p-8 hover:border-primary/50 transition-all duration-700 delay-100 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <span className="material-symbols-outlined text-2xl">graphic_eq</span>
+              <MdGraphicEq className="text-2xl" />
             </div>
             <h3 className="text-xl font-bold text-white mb-3">Natural Language</h3>
             <p className="text-gray-400 text-sm leading-relaxed">
@@ -44,7 +45,7 @@ const Features = () => {
           {/* Feature 2 */}
           <div className={`group relative overflow-hidden rounded-2xl border border-surface-border bg-surface-dark p-8 hover:border-primary/50 transition-all duration-700 delay-200 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <span className="material-symbols-outlined text-2xl">chat</span>
+              <MdChat className="text-2xl" />
             </div>
             <h3 className="text-xl font-bold text-white mb-3">Conversational AI</h3>
             <p className="text-gray-400 text-sm leading-relaxed">
@@ -54,7 +55,7 @@ const Features = () => {
           {/* Feature 3 */}
           <div className={`group relative overflow-hidden rounded-2xl border border-surface-border bg-surface-dark p-8 hover:border-primary/50 transition-all duration-700 delay-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <span className="material-symbols-outlined text-2xl">monitoring</span>
+              <MdInsights className="text-2xl" />
             </div>
             <h3 className="text-xl font-bold text-white mb-3">Productivity Stats</h3>
             <p className="text-gray-400 text-sm leading-relaxed">

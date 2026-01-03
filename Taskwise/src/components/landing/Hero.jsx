@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MdInstallMobile, MdAccountCircle, MdCheck, MdAutoAwesome, MdAdd } from 'react-icons/md';
 
 const Hero = () => {
   const [tasks, setTasks] = useState([
@@ -56,7 +57,7 @@ const Hero = () => {
                 Try for Free
               </button>
               <button className="h-12 px-8 rounded-lg bg-surface-dark border border-surface-border text-white font-bold text-base hover:bg-surface-border transition-all flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px]">install_mobile</span>
+                <MdInstallMobile className="text-[20px]" />
                 Open Web App
               </button>
             </div>
@@ -79,7 +80,7 @@ const Hero = () => {
                 <div className="pt-10 px-6 pb-4 flex justify-between items-center bg-background-dark">
                   <h3 className="text-white font-bold text-lg">Today</h3>
                   <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-sm">account_circle</span>
+                    <MdAccountCircle className="text-sm" />
                   </div>
                 </div>
                 {/* App Content */}
@@ -92,7 +93,7 @@ const Hero = () => {
                     >
                       <div className="flex items-center gap-3">
                         <div className={`h-5 w-5 rounded border flex items-center justify-center transition-colors duration-300 ${task.completed ? 'bg-primary border-primary' : 'border-primary/50'}`}>
-                          {task.completed && <span className="material-symbols-outlined text-[14px] text-background-dark">check</span>}
+                          {task.completed && <MdCheck className="text-[14px] text-background-dark" />}
                         </div>
                         <div className="flex-1">
                           <p className={`text-sm font-medium text-white transition-all duration-300 ${task.completed ? 'line-through text-gray-500' : ''}`}>{task.title}</p>
@@ -105,7 +106,7 @@ const Hero = () => {
                   {/* AI Suggestion */}
                   <div className={`mt-6 p-3 rounded-lg bg-primary/10 border border-primary/20 transition-all duration-700 transform ${showSuggestion ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                     <div className="flex gap-2 items-start">
-                      <span className="material-symbols-outlined text-primary text-sm mt-0.5 animate-pulse">auto_awesome</span>
+                      <MdAutoAwesome className="text-primary text-sm mt-0.5 animate-pulse" />
                       <div>
                         <p className="text-xs font-medium text-primary mb-1">AI Suggestion</p>
                         <p className="text-xs text-gray-300">It looks like you have a gap between 2 PM and 4 PM. Want to schedule "Deep Work"?</p>
@@ -115,7 +116,7 @@ const Hero = () => {
                 </div>
                 {/* Floating Action Button */}
                 <div className="absolute bottom-6 right-6 h-14 w-14 rounded-full bg-primary text-background-dark flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-110 transition-transform cursor-pointer">
-                  <span className="material-symbols-outlined text-2xl">add</span>
+                  <MdAdd className="text-2xl" />
                 </div>
               </div>
             </div>
