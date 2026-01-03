@@ -1,71 +1,139 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
+
+  const navItems = [
+    { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },
+    { icon: 'calendar_month', label: 'Calendar', path: '/calendar' },
+    { icon: 'view_kanban', label: 'Projects', path: '/projects' },
+    { icon: 'bar_chart', label: 'Analytics', path: '/analytics' },
+    { icon: 'smart_toy', label: 'AI Insights', path: '/ai-insights' },
+  ];
+
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <aside className="w-64 h-full flex flex-col border-r border-[#293738] bg-[#111717] hidden md:flex shrink-0 z-20">
-      <div className="p-6 flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-background-dark font-black text-xl">T</div>
-        <h1 className="text-white text-lg font-bold tracking-tight">TASKWISE</h1>
-      </div>
-      <div className="px-3 flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-1">
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary group transition-colors" href="#">
-            <span className="material-symbols-outlined text-[18px]">dashboard</span>
-            <span className="text-sm font-medium">Dashboard</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-[#293738] hover:text-white transition-colors" href="#">
-            <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-            <span className="text-sm font-medium">Calendar</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-[#293738] hover:text-white transition-colors" href="#">
-            <span className="material-symbols-outlined text-[18px]">view_kanban</span>
-            <span className="text-sm font-medium">Projects</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-[#293738] hover:text-white transition-colors" href="#">
-            <span className="material-symbols-outlined text-[18px]">bar_chart</span>
-            <span className="text-sm font-medium">Analytics</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-[#293738] hover:text-white transition-colors" href="#">
-            <span className="material-symbols-outlined text-[18px]">smart_toy</span>
-            <span className="text-sm font-medium">AI Insights</span>
-          </a>
+    <motion.aside 
+      initial={{ width: "16rem" }}
+      animate={{ width: isCollapsed ? "5rem" : "16rem" }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="h-full flex flex-col border-r border-[#293738] bg-[#111717] hidden md:flex shrink-0 z-20 overflow-hidden"
+    >
+      <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} relative`}>
+        <div className="flex items-center gap-2">
+          <img src="/Taskwise-icon.png" alt="Taskwise" className="w-8 h-8 object-contain" />
+          {!isCollapsed && (
+            <motion.h1 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-white text-lg font-bold tracking-tight whitespace-nowrap"
+            >
+              TASKWISE
+            </motion.h1>
+          )}
         </div>
-        <div className="mt-8">
-          <div className="flex items-center justify-between px-3 mb-2">
-            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">My Projects</p>
-            <button className="text-text-secondary hover:text-white transition-colors"><span className="material-symbols-outlined text-[16px]">add</span></button>
-          </div>
-          <div className="flex flex-col gap-1">
-            <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:bg-[#293738] hover:text-white transition-colors" href="#">
-              <div className="w-2 h-2 rounded-full bg-accent-blue"></div>
-              <span className="text-sm font-medium">Website Redesign</span>
-            </a>
-            <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:bg-[#293738] hover:text-white transition-colors" href="#">
-              <div className="w-2 h-2 rounded-full bg-accent-purple"></div>
-              <span className="text-sm font-medium">Q4 Marketing</span>
-            </a>
-            <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:bg-[#293738] hover:text-white transition-colors" href="#">
-              <div className="w-2 h-2 rounded-full bg-primary"></div>
-              <span className="text-sm font-medium">Personal Finance</span>
-            </a>
-          </div>
-        </div>
+        
+        {!isCollapsed && (
+          <button 
+            onClick={() => setIsCollapsed(true)}
+            className="text-text-secondary hover:text-white transition-colors"
+          >
+            <span className="material-symbols-outlined text-[20px]">menu_open</span>
+          </button>
+        )}
       </div>
-      <div className="p-4 border-t border-[#293738]">
-        <button className="w-full flex items-center justify-center gap-2 bg-primary text-[#111717] font-bold text-sm py-2.5 px-4 rounded-lg hover:bg-primary/90 transition-colors mb-4 shadow-[0_0_15px_rgba(30,201,210,0.3)]">
-          <span className="material-symbols-outlined text-[18px]">add_circle</span>
-          New Project
+
+      {/* Collapsed State Toggle Button (Centered when collapsed) */}
+      {isCollapsed && (
+        <button 
+          onClick={() => setIsCollapsed(false)}
+          className="mx-auto mb-4 text-text-secondary hover:text-white transition-colors"
+        >
+          <span className="material-symbols-outlined text-[20px]">menu</span>
         </button>
-        <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#293738] cursor-pointer transition-colors">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-blue to-primary flex items-center justify-center text-white text-xs font-bold border border-white/10">AL</div>
-          <div className="flex flex-col overflow-hidden">
-            <p className="text-white text-sm font-medium leading-none truncate">Alex Doe</p>
-            <p className="text-text-secondary text-xs truncate mt-1">Pro Plan</p>
+      )}
+
+      <div className="px-3 flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-col gap-1">
+          {navItems.map((item) => (
+            <Link 
+              key={item.label}
+              to={item.path} 
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                isActive(item.path)
+                ? 'bg-primary/10 text-primary' 
+                : 'text-text-secondary hover:bg-[#293738] hover:text-white'
+              } ${isCollapsed ? 'justify-center' : ''}`}
+              title={isCollapsed ? item.label : ''}
+            >
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              {!isCollapsed && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-sm font-medium whitespace-nowrap"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </Link>
+          ))}
+        </div>
+
+        {/* Smart Lists */}
+        <div className="mt-6">
+          {!isCollapsed && (
+            <p className="px-3 text-xs font-semibold text-[#5f7475] uppercase tracking-wider mb-2">Smart Lists</p>
+          )}
+          <div className="flex flex-col gap-1">
+            {[
+              { icon: 'today', label: 'Today', color: 'text-green-400' },
+              { icon: 'upcoming', label: 'Upcoming', color: 'text-purple-400' },
+              { icon: 'inbox', label: 'Someday', color: 'text-orange-400' },
+            ].map((item) => (
+              <a 
+                key={item.label}
+                href="#" 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-text-secondary hover:bg-[#293738] hover:text-white ${isCollapsed ? 'justify-center' : ''}`}
+                title={isCollapsed ? item.label : ''}
+              >
+                <span className={`material-symbols-outlined text-[20px] ${item.color}`}>{item.icon}</span>
+                {!isCollapsed && (
+                  <motion.span 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-sm font-medium whitespace-nowrap"
+                  >
+                    {item.label}
+                  </motion.span>
+                )}
+              </a>
+            ))}
           </div>
-          <span className="material-symbols-outlined text-text-secondary ml-auto text-[18px]">settings</span>
         </div>
       </div>
-    </aside>
+
+      <div className="p-4 border-t border-[#293738]">
+        <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#293738] cursor-pointer transition-colors ${isCollapsed ? 'justify-center' : ''}`}>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-blue to-primary flex items-center justify-center text-white text-xs font-bold border border-white/10 shrink-0">AL</div>
+          {!isCollapsed && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col overflow-hidden"
+            >
+              <p className="text-white text-sm font-medium leading-none truncate">Alex Doe</p>
+            </motion.div>
+          )}
+          {!isCollapsed && <span className="material-symbols-outlined text-text-secondary ml-auto text-[18px]">settings</span>}
+        </div>
+      </div>
+    </motion.aside>
   );
 };
 
