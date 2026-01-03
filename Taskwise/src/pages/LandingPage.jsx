@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 import VisualDemo from '../components/landing/VisualDemo';
@@ -10,7 +11,13 @@ import Footer from '../components/landing/Footer';
 
 const LandingPage = () => {
   return (
-    <div className="bg-background-dark font-display text-white antialiased selection:bg-primary selection:text-background-dark">
+    <motion.div 
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      transition={{ duration: 0.3 }}
+      className="bg-background-dark font-display text-white antialiased selection:bg-primary selection:text-background-dark"
+    >
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
         <Navbar />
         <Hero />
@@ -21,7 +28,7 @@ const LandingPage = () => {
         <CTA /> 
         <Footer />
       </div>
-    </div>
+    </motion.div>
   );
 };
 

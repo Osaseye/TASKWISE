@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { MdCheck, MdDeviceHub, MdCalendarMonth, MdSchedule, MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 
@@ -7,7 +8,13 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
 
 return (
-    <div className="bg-background-dark min-h-screen flex items-center justify-center p-4 antialiased selection:bg-primary selection:text-background-dark relative overflow-hidden font-body text-white">
+    <motion.div 
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 20 }}
+        transition={{ duration: 0.3 }}
+        className="bg-background-dark min-h-screen flex items-center justify-center p-4 antialiased selection:bg-primary selection:text-background-dark relative overflow-hidden font-body text-white"
+    >
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[100px] animate-pulse"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }}></div>
@@ -68,7 +75,7 @@ return (
                             <label className="ml-2 block text-sm text-gray-400 cursor-pointer select-none" htmlFor="remember-me">Remember me</label>
                         </div>
                         <div className="text-sm">
-                            <a className="font-medium text-primary hover:text-primary-dark transition-colors" href="#">Forgot password?</a>
+                            <Link className="font-medium text-primary hover:text-primary-dark transition-colors" to="/forgot-password">Forgot password?</Link>
                         </div>
                     </div>
                     <div>
@@ -104,7 +111,7 @@ return (
             </div>
             <div className="mt-8 text-center">
                 <p className="text-xs text-gray-500">
-                    © 2023 TASKWISE Inc. All rights reserved.
+                    © 2026 TASKWISE Inc. All rights reserved.
                 </p>
                 <div className="flex justify-center space-x-4 mt-2">
                     <a className="text-xs text-gray-500 hover:text-gray-300" href="#">Privacy</a>
@@ -112,7 +119,7 @@ return (
                 </div>
             </div>
         </div>
-    </div>
+    </motion.div>
 );
 };
 
