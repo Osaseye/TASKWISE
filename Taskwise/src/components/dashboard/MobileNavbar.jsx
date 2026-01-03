@@ -17,7 +17,7 @@ const MobileNavbar = () => {
 
   return (
     <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4 md:hidden pointer-events-none">
-      <div className="bg-[#1e293b]/90 backdrop-blur-md border border-[#293738] rounded-full px-6 py-3 shadow-2xl shadow-black/50 pointer-events-auto flex items-center gap-6 sm:gap-8">
+      <div className="bg-[#1e293b]/60 backdrop-blur-xl border border-white/10 rounded-full px-6 py-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] pointer-events-auto flex items-center gap-6 sm:gap-8 ring-1 ring-white/5">
         {navItems.map((item) => (
           <Link 
             key={item.path} 
