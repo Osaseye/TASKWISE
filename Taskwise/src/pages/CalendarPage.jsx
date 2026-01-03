@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
+import MobileNavbar from '../components/dashboard/MobileNavbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
@@ -8,6 +9,7 @@ import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek'; 
 import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
+import { addDays, isSameDay, isToday } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const locales = {
@@ -54,6 +56,27 @@ const CalendarPage = () => {
   const [newEventData, setNewEventData] = useState({ title: '', type: 'medium', category: 'Work' });
   const [date, setDate] = useState(new Date()); // Start on Today
   const [view, setView] = useState('week');
+
+  // Mobile Calendar Logic
+  const [mobileSelectedDate, setMobileSelectedDate] = useState(new Date());
+  const scrollRef = useRef(null);
+
+  // Generate 30 days around today for mobile view
+  const mobileDates = Array.from({ length: 30 }, (_, i) => addDays(new Date(), i - 2));
+
+  useEffect(() => {
+    // Center the selected date on mount
+    if (scrollRef.current) {
+      const selectedIndex = mobileDates.findIndex(d => isSameDay(d, mobileSelectedDate));
+      if (selectedIndex !== -1) {
+        const itemWidth = 70; // Approx width of date item + gap
+        const containerWidth = scrollRef.current.offsetWidth;
+        scrollRef.current.scrollLeft = (selectedIndex * itemWidth) - (containerWidth / 2) + (itemWidth / 2);
+      }
+    }
+  }, []);
+
+  const mobileEvents = events.filter(event => isSameDay(event.start, mobileSelectedDate));
 
   const handleEventClick = (event) => {
     const timeString = `${format(event.start, 'h:mm')} - ${format(event.end, 'h:mm a')}`;
@@ -243,8 +266,93 @@ const CalendarPage = () => {
       
       {/* Main Content */}
       <main 
-        className="flex-1 flex flex-col h-full overflow-y-auto relative scroll-smooth"
+        className="flex-1 flex flex-col h-full overflow-hidden relative"
       >
+        {/* Mobile View */}
+        <div className="md:hidden flex flex-col h-full pb-32 overflow-hidden bg-background-dark">
+            {/* Header */}
+            <div className="p-6 pb-2">
+                <h1 className="text-2xl font-bold text-white mb-1">Calendar</h1>
+                <p className="text-[#9eb6b7] text-sm">{format(mobileSelectedDate, 'MMMM yyyy')}</p>
+            </div>
+
+            {/* Date Scroller */}
+            <div 
+                ref={scrollRef}
+                className="flex overflow-x-auto gap-3 px-6 py-4 no-scrollbar snap-x snap-mandatory"
+            >
+                {mobileDates.map((d, i) => {
+                    const isSelected = isSameDay(d, mobileSelectedDate);
+                    const isTodayDate = isToday(d);
+                    return (
+                        <div 
+                            key={i}
+                            onClick={() => setMobileSelectedDate(d)}
+                            className={`flex-shrink-0 w-[60px] h-[80px] rounded-2xl flex flex-col items-center justify-center gap-1 snap-center transition-all cursor-pointer border ${
+                                isSelected 
+                                    ? 'bg-primary text-[#111717] border-primary shadow-[0_0_15px_rgba(30,201,210,0.4)]' 
+                                    : isTodayDate
+                                        ? 'bg-[#1a2324] text-primary border-primary/30'
+                                        : 'bg-[#1a2324] text-[#9eb6b7] border-transparent'
+                            }`}
+                        >
+                            <span className="text-xs font-medium uppercase">{format(d, 'EEE')}</span>
+                            <span className={`text-xl font-bold ${isSelected ? 'text-[#111717]' : 'text-white'}`}>{format(d, 'd')}</span>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Events List */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                <div className="flex justify-between items-center mb-2">
+                    <h2 className="text-white font-bold">Schedule</h2>
+                    <button onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })} className="w-8 h-8 rounded-full bg-[#1a2324] flex items-center justify-center text-primary">
+                        <span className="material-symbols-outlined text-lg">add</span>
+                    </button>
+                </div>
+
+                {mobileEvents.length > 0 ? (
+                    mobileEvents.map(event => (
+                        <div 
+                            key={event.id} 
+                            onClick={() => handleEventClick(event)}
+                            className="bg-[#1a2324] border border-[#293738] p-4 rounded-xl flex gap-4 relative overflow-hidden"
+                        >
+                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                event.type === 'high' ? 'bg-red-500' : 
+                                event.type === 'medium' ? 'bg-amber-500' : 'bg-primary'
+                            }`} />
+                            <div className="flex-1">
+                                <h3 className="text-white font-bold mb-1">{event.title}</h3>
+                                <div className="flex items-center gap-2 text-xs text-[#9eb6b7]">
+                                    <span className="material-symbols-outlined text-sm">schedule</span>
+                                    {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
+                                </div>
+                            </div>
+                            {event.category && (
+                                <span className="text-[10px] uppercase font-bold tracking-wider bg-black/30 text-[#9eb6b7] px-2 py-1 rounded h-fit self-start">
+                                    {event.category}
+                                </span>
+                            )}
+                        </div>
+                    ))
+                ) : (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                        <div className="w-16 h-16 rounded-full bg-[#1a2324] flex items-center justify-center mb-4">
+                            <span className="material-symbols-outlined text-[#5f7475] text-2xl">event_busy</span>
+                        </div>
+                        <p className="text-[#9eb6b7]">No events for this day</p>
+                        <button onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })} className="mt-4 text-primary text-sm font-medium">
+                            + Add Event
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden md:flex flex-col h-full overflow-hidden">
         {/* Header Section */}
         <header className="bg-background-dark border-b border-[#293738] p-4 pb-0 z-20">
           {/* Top Row: NLP Search & Actions */}
@@ -341,6 +449,9 @@ const CalendarPage = () => {
             onSelectEvent={handleEventClick}
           />
         </div>
+        </div> {/* End Desktop View */}
+        
+        <MobileNavbar />
 
         {/* Task Details Modal */}
         <AnimatePresence>

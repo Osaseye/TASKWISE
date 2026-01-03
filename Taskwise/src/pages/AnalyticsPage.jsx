@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
+import MobileNavbar from '../components/dashboard/MobileNavbar';
 
 const AnalyticsPage = () => {
   const [timeRange, setTimeRange] = useState('week');
@@ -171,10 +172,10 @@ const AnalyticsPage = () => {
       <Sidebar />
       
       <main className="flex-1 flex flex-col min-w-0 relative">
-        <header className="h-16 flex items-center justify-between px-8 border-b border-border-dark bg-background-dark/80 backdrop-blur-md sticky top-0 z-10">
-          <h1 className="text-2xl font-heading font-semibold text-white">Analytics Overview</h1>
+        <header className="h-16 flex items-center justify-between px-4 md:px-8 border-b border-border-dark bg-background-dark/80 backdrop-blur-md sticky top-0 z-10">
+          <h1 className="text-xl md:text-2xl font-heading font-semibold text-white">Analytics Overview</h1>
           <div className="flex items-center gap-4">
-            <div className="flex bg-surface-dark p-1 rounded-lg border border-border-dark">
+            <div className="hidden md:flex bg-surface-dark p-1 rounded-lg border border-border-dark">
               {['Today', 'Week', 'Month'].map((range) => (
                 <button
                   key={range}
@@ -195,10 +196,24 @@ const AnalyticsPage = () => {
                 Custom <span className="material-symbols-outlined text-sm">calendar_today</span>
               </button>
             </div>
-            <div className="h-6 w-px bg-border-dark mx-2"></div>
+            
+            {/* Mobile Time Selector */}
+            <div className="md:hidden">
+               <select 
+                 value={timeRange} 
+                 onChange={(e) => setTimeRange(e.target.value)}
+                 className="bg-surface-dark text-white text-sm border border-border-dark rounded-lg px-2 py-1 outline-none focus:border-primary"
+               >
+                 <option value="today">Today</option>
+                 <option value="week">Week</option>
+                 <option value="month">Month</option>
+               </select>
+            </div>
+
+            <div className="hidden md:block h-6 w-px bg-border-dark mx-2"></div>
             <button 
               onClick={() => setShowExportModal(true)}
-              className="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-dark transition-colors px-3 py-1.5 rounded-lg hover:bg-primary/5"
+              className="hidden md:flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-dark transition-colors px-3 py-1.5 rounded-lg hover:bg-primary/5"
             >
               <span className="material-symbols-outlined text-lg">download</span>
               Export Report
@@ -206,7 +221,7 @@ const AnalyticsPage = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 bg-grid-pattern">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-grid-pattern pb-32 md:pb-8">
           <div className="max-w-7xl mx-auto space-y-6">
             
             {/* Stats Grid */}
@@ -641,6 +656,7 @@ const AnalyticsPage = () => {
           </div>
         )}
 
+        <MobileNavbar />
         <AIAssistantButton />
       </main>
     </div>

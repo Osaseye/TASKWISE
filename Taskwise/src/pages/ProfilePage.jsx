@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
+import MobileNavbar from '../components/dashboard/MobileNavbar';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 
@@ -29,7 +30,7 @@ const ProfilePage = () => {
         <Sidebar />
         
         {/* Main Content Area */}
-        <main className="flex-1 h-full overflow-y-auto relative flex flex-col items-center bg-[#111717]">
+        <main className="flex-1 h-full overflow-y-auto relative flex flex-col items-center bg-[#111717] pb-32 md:pb-0">
           {/* Header Container */}
           <div className="w-full max-w-[1024px] px-8 md:px-12 lg:px-16 py-8 flex flex-col gap-8">
             
@@ -219,6 +220,7 @@ const ProfilePage = () => {
           </div>
         </main>
 
+        <MobileNavbar />
         <AIAssistantButton />
 
         {/* Edit Profile Modal */}

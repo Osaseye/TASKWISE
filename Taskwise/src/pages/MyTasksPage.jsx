@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
+import MobileNavbar from '../components/dashboard/MobileNavbar';
 import CreateTaskModal from '../components/dashboard/CreateTaskModal';
 import TaskDetailsModal from '../components/dashboard/TaskDetailsModal';
 import DeleteConfirmationModal from '../components/dashboard/DeleteConfirmationModal';
@@ -142,7 +143,7 @@ const MyTasksPage = () => {
       {/* Main Content */}
       <main className="flex-1 h-full flex flex-col relative overflow-hidden bg-background-dark">
         {/* Content Scroll Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto custom-scrollbar pb-32 md:pb-0">
           <div className="max-w-[1024px] mx-auto px-6 py-8 md:px-10 md:py-10 flex flex-col gap-8">
             
             {/* Page Heading */}
@@ -367,6 +368,7 @@ const MyTasksPage = () => {
           </div>
         </div>
       </main>
+      <MobileNavbar />
       <AIAssistantButton />
 
       {/* Modals */}

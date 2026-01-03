@@ -8,6 +8,7 @@ import StatsRow from '../components/dashboard/StatsRow';
 import TodaysFocus from '../components/dashboard/TodaysFocus';
 import UpcomingTasks from '../components/dashboard/UpcomingTasks';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
+import MobileNavbar from '../components/dashboard/MobileNavbar';
 
 const DashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +36,7 @@ const DashboardPage = () => {
           <Header />
 
           {/* Dashboard Content */}
-          <div className="px-6 md:px-8 pb-20">
+          <div className="px-6 md:px-8 pb-32 md:pb-20">
             <StatsRow loading={isLoading} />
 
             {/* Main Workspace Grid */}
@@ -48,6 +49,7 @@ const DashboardPage = () => {
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
         </main>
         <AIAssistantButton />
+        <MobileNavbar />
       </motion.div>
     </SkeletonTheme>
   );
