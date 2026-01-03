@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MdCheck, MdDeviceHub, MdCalendarMonth, MdSchedule, MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { FaGoogle, FaGithub, FaSpinner } from 'react-icons/fa';
@@ -7,6 +7,7 @@ import { FaGoogle, FaGithub, FaSpinner } from 'react-icons/fa';
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -14,6 +15,7 @@ const LoginPage = () => {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
+      navigate('/dashboard');
     }, 2000);
   };
 

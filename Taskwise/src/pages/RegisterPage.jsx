@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MdPerson, MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { FaGoogle, FaGithub, FaSpinner } from 'react-icons/fa';
@@ -7,6 +7,7 @@ import { FaGoogle, FaGithub, FaSpinner } from 'react-icons/fa';
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleRegister = (e) => {
     e.preventDefault();
@@ -14,6 +15,7 @@ const RegisterPage = () => {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
+      navigate('/onboarding/step1');
     }, 2000);
   };
 
