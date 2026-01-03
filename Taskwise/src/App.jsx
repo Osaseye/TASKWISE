@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { UIProvider } from './context/UIContext';
+import AIAssistantSidebar from './components/dashboard/AIAssistantSidebar';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -36,9 +38,12 @@ const AnimatedRoutes = () => {
 
 function App() {
   return (
-    <Router>
-      <AnimatedRoutes />
-    </Router>
+    <UIProvider>
+      <Router>
+        <AIAssistantSidebar />
+        <AnimatedRoutes />
+      </Router>
+    </UIProvider>
   );
 }
 
