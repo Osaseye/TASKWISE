@@ -1,9 +1,44 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import TaskDetailsModal from './TaskDetailsModal';
+import Skeleton from 'react-loading-skeleton';
 
-const UpcomingTasks = () => {
+const UpcomingTasks = ({ loading }) => {
   const [selectedTask, setSelectedTask] = useState(null);
+
+  if (loading) {
+    return (
+      <div className="lg:col-span-1 flex flex-col gap-4">
+        <div className="bg-surface-dark border border-[#293738] rounded-2xl p-6 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-[#293738]">
+                <Skeleton width={20} height={20} />
+              </div>
+              <Skeleton width={120} height={24} />
+            </div>
+            <Skeleton width={24} height={24} circle />
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="group relative pl-4 border-l-2 border-[#293738] py-1">
+                <Skeleton width="80%" height={20} className="mb-2" />
+                <div className="flex items-center gap-2">
+                  <Skeleton width={16} height={16} />
+                  <Skeleton width={60} height={14} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-auto pt-6 border-t border-[#293738]">
+            <Skeleton width="100%" height={40} borderRadius={8} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Mock data for upcoming tasks
   const upcomingTasks = [

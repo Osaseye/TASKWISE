@@ -5,8 +5,9 @@ import TaskDetailsModal from './TaskDetailsModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import QuickActionModal from './QuickActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import Skeleton from 'react-loading-skeleton';
 
-const TodaysFocus = () => {
+const TodaysFocus = ({ loading }) => {
   const { tasks, toggleTask, addTask, updateTask, deleteTask } = useTasks();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -17,6 +18,56 @@ const TodaysFocus = () => {
   const [activeDropdownId, setActiveDropdownId] = useState(null);
   const [sortType, setSortType] = useState('default'); // default, priority, time
   const [filterType, setFilterType] = useState('all'); // all, active, completed
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => setActiveDropdownId(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="lg:col-span-2 flex flex-col h-full">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Skeleton width={32} height={32} borderRadius={8} />
+            <div>
+              <Skeleton width={150} height={24} />
+              <Skeleton width={100} height={16} />
+            </div>
+          </div>
+          <Skeleton width={120} height={40} borderRadius={8} />
+        </div>
+
+        <div className="flex-1 bg-surface-dark border border-[#293738] rounded-2xl p-1 overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-[#293738] flex justify-between items-center">
+            <div className="flex gap-2">
+              <Skeleton width={80} height={32} borderRadius={8} />
+              <Skeleton width={80} height={32} borderRadius={8} />
+            </div>
+            <Skeleton width={100} height={32} borderRadius={8} />
+          </div>
+          
+          <div className="p-4 flex flex-col gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-[#111717] border border-[#293738] p-4 rounded-xl flex items-center gap-4">
+                <Skeleton circle width={24} height={24} />
+                <div className="flex-1">
+                  <Skeleton width="60%" height={20} className="mb-2" />
+                  <div className="flex gap-2">
+                    <Skeleton width={60} height={16} borderRadius={4} />
+                    <Skeleton width={60} height={16} borderRadius={4} />
+                  </div>
+                </div>
+                <Skeleton width={24} height={24} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSaveTask = (taskData) => {
     if (editingTask) {
@@ -50,13 +101,6 @@ const TodaysFocus = () => {
     e.stopPropagation();
     setActiveDropdownId(activeDropdownId === id ? null : id);
   };
-
-  // Close dropdown when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = () => setActiveDropdownId(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
 
   // Filter and Sort Logic
   const getProcessedTasks = () => {

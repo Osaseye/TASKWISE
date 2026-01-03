@@ -1,13 +1,38 @@
 import React from 'react';
 import { useTasks } from '../../context/TaskContext';
 import { motion } from 'framer-motion';
+import Skeleton from 'react-loading-skeleton';
 
-const StatsRow = () => {
+const StatsRow = ({ loading }) => {
   const { tasks, stats } = useTasks();
   
   const completedCount = tasks.filter(t => t.completed).length;
   const totalCount = tasks.length;
   const pendingCount = totalCount - completedCount;
+
+  if (loading) {
+    return (
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-surface-dark border border-[#293738] rounded-xl p-4 flex flex-col justify-between h-[120px]">
+            <div className="flex justify-between items-start mb-3">
+              <Skeleton width={32} height={32} borderRadius={8} />
+              <Skeleton width={60} height={20} />
+            </div>
+            <div>
+              <Skeleton width={100} height={16} className="mb-2" />
+              <div className="flex items-end gap-3">
+                <Skeleton width={40} height={32} />
+                <div className="flex-1 pb-2">
+                  <Skeleton height={6} borderRadius={999} />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </section>
+    );
+  }
 
   return (
     <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
