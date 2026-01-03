@@ -131,7 +131,12 @@ const MyTasksPage = () => {
   const processedTasks = getProcessedTasks();
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden h-screen flex">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden h-screen flex"
+    >
       <Sidebar />
 
       {/* Main Content */}
@@ -400,7 +405,7 @@ const MyTasksPage = () => {
         type={quickAction?.type}
         task={quickAction?.task}
       />
-    </div>
+    </motion.div>
   );
 };
 

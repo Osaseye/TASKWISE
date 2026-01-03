@@ -139,14 +139,14 @@ const CalendarPage = () => {
 
   const CustomEvent = ({ event }) => {
     return (
-      <div className="h-full w-full p-1.5 flex flex-col gap-0.5">
+      <div className="custom-event-container h-full w-full p-1.5 flex flex-col gap-0.5">
         <div className="flex items-center justify-between gap-1">
           <span className="font-bold text-xs truncate leading-tight">{event.title}</span>
           {event.category && (
-            <span className="text-[8px] uppercase tracking-wider opacity-75 bg-black/20 px-1 rounded-[2px]">{event.category}</span>
+            <span className="custom-event-category text-[8px] uppercase tracking-wider opacity-75 bg-black/20 px-1 rounded-[2px]">{event.category}</span>
           )}
         </div>
-        <div className="text-[10px] opacity-80 truncate flex items-center gap-1">
+        <div className="custom-event-time text-[10px] opacity-80 truncate flex items-center gap-1">
           <span className="material-symbols-outlined text-[10px]">schedule</span>
           {format(event.start, 'h:mm')} - {format(event.end, 'h:mm a')}
         </div>okay ow 
@@ -155,7 +155,12 @@ const CalendarPage = () => {
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-[#111717] dark:text-white font-display overflow-hidden h-screen flex">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="bg-background-light dark:bg-background-dark text-[#111717] dark:text-white font-display overflow-hidden h-screen flex"
+    >
       <style>{`
         .rbc-calendar { font-family: inherit; }
         .rbc-header { border-bottom: 1px solid #1a2324 !important; padding: 8px 0; font-size: 12px; font-weight: 500; color: #9eb6b7; text-transform: uppercase; }
@@ -198,6 +203,41 @@ const CalendarPage = () => {
         ::-webkit-scrollbar-track { background: #111717; }
         ::-webkit-scrollbar-thumb { background: #293738; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #5f7475; }
+
+        /* Month View Specifics */
+        .rbc-month-view .rbc-event {
+          padding: 0 !important;
+          min-height: 0 !important;
+        }
+        .rbc-month-view .custom-event-container {
+          padding: 2px 4px !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 4px !important;
+        }
+        .rbc-month-view .custom-event-time {
+          display: none !important;
+        }
+        .rbc-month-view .custom-event-category {
+          display: none !important;
+        }
+        
+        /* Popup Styling */
+        .rbc-overlay {
+          background-color: #161e1f !important;
+          border: 1px solid #293738 !important;
+          border-radius: 8px !important;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+          padding: 8px !important;
+          z-index: 100 !important;
+        }
+        .rbc-overlay-header {
+          border-bottom: 1px solid #293738 !important;
+          margin-bottom: 8px !important;
+          padding-bottom: 4px !important;
+          color: #white !important;
+          font-weight: bold !important;
+        }
       `}</style>
       <Sidebar />
       
@@ -296,6 +336,7 @@ const CalendarPage = () => {
             step={60}
             timeslots={1}
             selectable
+            popup
             onSelectSlot={handleSelectSlot}
             onSelectEvent={handleEventClick}
           />
@@ -517,7 +558,7 @@ const CalendarPage = () => {
         </AnimatePresence>
       </main>
       <AIAssistantButton />
-    </div>
+    </motion.div>
   );
 };
 
