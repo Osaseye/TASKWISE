@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => {
   const [taskData, setTaskData] = useState({
     title: '',
+    date: '',
     time: '',
     priority: 'Medium',
     category: 'General'
@@ -15,6 +16,7 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
     } else if (isOpen && !initialData) {
       setTaskData({
         title: '',
+        date: new Date().toISOString().split('T')[0], // Default to today
         time: '',
         priority: 'Medium',
         category: 'General'
@@ -33,6 +35,7 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
     if (!initialData) {
       setTaskData({
         title: '',
+        date: '',
         time: '',
         priority: 'Medium',
         category: 'General'
@@ -52,7 +55,9 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-white">{initialData ? 'Edit Task' : 'Create New Task'}</h3>
+                <h3 className="text-lg font-bold text-white">
+                  {initialData && !initialData.id ? 'Confirm Task Details' : initialData ? 'Edit Task' : 'Create New Task'}
+                </h3>
                 <button onClick={onClose} className="text-text-secondary hover:text-white transition-colors">
                   <span className="material-symbols-outlined">close</span>
                 </button>
@@ -74,6 +79,19 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1.5">Date</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">calendar_today</span>
+                      <input
+                        type="date"
+                        name="date"
+                        value={taskData.date || ''}
+                        onChange={handleChange}
+                        className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors [color-scheme:dark]"
+                      />
+                    </div>
+                  </div>
+                  <div>
                     <label className="block text-xs font-medium text-text-secondary mb-1.5">Time</label>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">schedule</span>
@@ -87,19 +105,20 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-text-secondary mb-1.5">Category</label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">folder</span>
-                      <input
-                        type="text"
-                        name="category"
-                        value={taskData.category}
-                        onChange={handleChange}
-                        placeholder="e.g. Work"
-                        className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
-                      />
-                    </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-text-secondary mb-1.5">Category</label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">folder</span>
+                    <input
+                      type="text"
+                      name="category"
+                      value={taskData.category}
+                      onChange={handleChange}
+                      placeholder="e.g. Work"
+                      className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
+                    />
                   </div>
                 </div>
 

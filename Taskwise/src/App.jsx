@@ -10,6 +10,7 @@ import OnboardingStep3 from './pages/onboarding/OnboardingStep3';
 import OnboardingStep4 from './pages/onboarding/OnboardingStep4';
 import DashboardPage from './pages/DashboardPage';
 import CalendarPage from './pages/CalendarPage';
+import MyTasksPage from './pages/MyTasksPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -27,6 +28,7 @@ const AnimatedRoutes = () => {
         <Route path="/onboarding/step4" element={<OnboardingStep4 />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/tasks" element={<MyTasksPage />} />
       </Routes>
     </AnimatePresence>
   );

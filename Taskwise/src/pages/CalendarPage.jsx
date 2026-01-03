@@ -51,7 +51,7 @@ const CalendarPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [newEventData, setNewEventData] = useState({ title: '', type: 'medium' });
+  const [newEventData, setNewEventData] = useState({ title: '', type: 'medium', category: 'Work' });
   const [date, setDate] = useState(new Date()); // Start on Today
   const [view, setView] = useState('week');
 
@@ -65,7 +65,7 @@ const CalendarPage = () => {
     // Prevent selecting past dates/times
     if (start < new Date()) return;
     
-    setNewEventData({ title: '', type: 'medium', start, end });
+    setNewEventData({ title: '', type: 'medium', category: 'Work', start, end });
     setIsCreateModalOpen(true);
   };
 
@@ -76,7 +76,7 @@ const CalendarPage = () => {
       setEvents([...events, { ...newEventData, id: Date.now() }]);
     }
     setIsCreateModalOpen(false);
-    setNewEventData({ title: '', type: 'medium' });
+    setNewEventData({ title: '', type: 'medium', category: 'Work' });
   };
 
   const handleDeleteEvent = () => {
@@ -139,9 +139,15 @@ const CalendarPage = () => {
 
   const CustomEvent = ({ event }) => {
     return (
-      <div className="h-full w-full p-1">
-        <div className="font-bold text-xs truncate">{event.title}</div>
-        <div className="text-[10px] opacity-70 truncate">
+      <div className="h-full w-full p-1.5 flex flex-col gap-0.5">
+        <div className="flex items-center justify-between gap-1">
+          <span className="font-bold text-xs truncate leading-tight">{event.title}</span>
+          {event.category && (
+            <span className="text-[8px] uppercase tracking-wider opacity-75 bg-black/20 px-1 rounded-[2px]">{event.category}</span>
+          )}
+        </div>
+        <div className="text-[10px] opacity-80 truncate flex items-center gap-1">
+          <span className="material-symbols-outlined text-[10px]">schedule</span>
           {format(event.start, 'h:mm')} - {format(event.end, 'h:mm a')}
         </div>okay ow 
       </div>
@@ -456,6 +462,17 @@ const CalendarPage = () => {
                         {newEventData.end && format(newEventData.end, 'h:mm a')}
                       </div>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[#5f7475] uppercase mb-1">Category</label>
+                    <input 
+                      type="text" 
+                      className="w-full bg-background-dark border border-[#293738] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+                      placeholder="e.g., Work, Personal, Meeting"
+                      value={newEventData.category || ''}
+                      onChange={(e) => setNewEventData({...newEventData, category: e.target.value})}
+                    />
                   </div>
 
                   <div>

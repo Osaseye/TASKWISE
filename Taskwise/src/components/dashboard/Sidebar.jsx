@@ -9,6 +9,7 @@ const Sidebar = () => {
   const navItems = [
     { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },
     { icon: 'calendar_month', label: 'Calendar', path: '/calendar' },
+    { icon: 'check_circle', label: 'My Tasks', path: '/tasks' },
     { icon: 'view_kanban', label: 'Projects', path: '/projects' },
     { icon: 'bar_chart', label: 'Analytics', path: '/analytics' },
     { icon: 'smart_toy', label: 'AI Insights', path: '/ai-insights' },
@@ -83,38 +84,6 @@ const Sidebar = () => {
               )}
             </Link>
           ))}
-        </div>
-
-        {/* Smart Lists */}
-        <div className="mt-6">
-          {!isCollapsed && (
-            <p className="px-3 text-xs font-semibold text-[#5f7475] uppercase tracking-wider mb-2">Smart Lists</p>
-          )}
-          <div className="flex flex-col gap-1">
-            {[
-              { icon: 'today', label: 'Today', color: 'text-green-400' },
-              { icon: 'upcoming', label: 'Upcoming', color: 'text-purple-400' },
-              { icon: 'inbox', label: 'Someday', color: 'text-orange-400' },
-            ].map((item) => (
-              <a 
-                key={item.label}
-                href="#" 
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-text-secondary hover:bg-[#293738] hover:text-white ${isCollapsed ? 'justify-center' : ''}`}
-                title={isCollapsed ? item.label : ''}
-              >
-                <span className={`material-symbols-outlined text-[20px] ${item.color}`}>{item.icon}</span>
-                {!isCollapsed && (
-                  <motion.span 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-sm font-medium whitespace-nowrap"
-                  >
-                    {item.label}
-                  </motion.span>
-                )}
-              </a>
-            ))}
-          </div>
         </div>
       </div>
 
