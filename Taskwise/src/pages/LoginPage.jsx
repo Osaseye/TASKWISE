@@ -2,10 +2,20 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MdCheck, MdDeviceHub, MdCalendarMonth, MdSchedule, MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
-import { FaGoogle, FaGithub } from 'react-icons/fa';
+import { FaGoogle, FaGithub, FaSpinner } from 'react-icons/fa';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+  };
 
 return (
     <motion.div 
@@ -33,7 +43,7 @@ return (
             </div>
             <div className="bg-surface-dark rounded-2xl shadow-xl border border-surface-border p-8 relative overflow-hidden backdrop-blur-sm bg-opacity-90">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-400 to-primary"></div>
-                <form action="#" className="space-y-6" method="POST">
+                <form onSubmit={handleLogin} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="email">Email address</label>
                         <div className="relative rounded-md shadow-sm">
@@ -79,8 +89,16 @@ return (
                         </div>
                     </div>
                     <div>
-                        <button className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-background-dark bg-gradient-to-r from-primary to-blue-400 hover:from-primary-dark hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-all duration-300 transform hover:-translate-y-0.5" type="submit">
-                            Sign in to Dashboard
+                        <button 
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-background-dark bg-gradient-to-r from-primary to-blue-400 hover:from-primary-dark hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none" 
+                            type="submit"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (
+                                <FaSpinner className="animate-spin h-5 w-5 text-background-dark" />
+                            ) : (
+                                "Sign in to Dashboard"
+                            )}
                         </button>
                     </div>
                 </form>

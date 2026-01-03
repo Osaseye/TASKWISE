@@ -2,10 +2,20 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MdPerson, MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
-import { FaGoogle, FaGithub } from 'react-icons/fa';
+import { FaGoogle, FaGithub, FaSpinner } from 'react-icons/fa';
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+  };
 
   return (
     <motion.div 
@@ -34,7 +44,7 @@ const RegisterPage = () => {
         <div className="bg-surface-dark rounded-2xl shadow-xl border border-surface-border p-8 relative overflow-hidden backdrop-blur-sm bg-opacity-90">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-400 to-primary"></div>
           <h2 className="text-xl font-semibold text-white mb-6">Create your account</h2>
-          <form action="#" className="space-y-5" method="POST">
+          <form onSubmit={handleRegister} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="name">Full Name</label>
               <div className="relative rounded-md shadow-sm">
@@ -111,10 +121,15 @@ const RegisterPage = () => {
             </div>
             <div>
               <button 
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-background-dark bg-gradient-to-r from-primary to-blue-400 hover:from-primary-dark hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-all duration-300 transform hover:-translate-y-0.5" 
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-background-dark bg-gradient-to-r from-primary to-blue-400 hover:from-primary-dark hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-all duration-300 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none" 
                 type="submit"
+                disabled={isLoading}
               >
-                Get Started
+                {isLoading ? (
+                  <FaSpinner className="animate-spin h-5 w-5 text-background-dark" />
+                ) : (
+                  "Get Started"
+                )}
               </button>
             </div>
           </form>

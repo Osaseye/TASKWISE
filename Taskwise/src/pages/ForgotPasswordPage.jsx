@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MdEmail, MdArrowBack, MdLockReset } from 'react-icons/md';
+import { MdEmail, MdArrowBack, MdLockReset, MdCheckCircle } from 'react-icons/md';
+import { FaSpinner } from 'react-icons/fa';
 
 const ForgotPasswordPage = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleReset = (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      setIsSuccess(true);
+    }, 2000);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, x: -20 }}
@@ -23,39 +37,62 @@ const ForgotPasswordPage = () => {
           
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-surface-border rounded-full flex items-center justify-center mx-auto mb-4 text-primary transform hover:scale-110 transition-transform duration-300">
-              <MdLockReset className="text-3xl" />
+              {isSuccess ? (
+                <MdCheckCircle className="text-3xl text-green-500" />
+              ) : (
+                <MdLockReset className="text-3xl" />
+              )}
             </div>
-            <h1 className="font-display text-2xl font-bold text-white mb-2">Forgot Password?</h1>
+            <h1 className="font-display text-2xl font-bold text-white mb-2">
+              {isSuccess ? "Check your email" : "Forgot Password?"}
+            </h1>
             <p className="text-gray-400 text-sm leading-relaxed">
-              No worries, we'll send you reset instructions.
+              {isSuccess 
+                ? "We have sent password reset instructions to your email address." 
+                : "No worries, we'll send you reset instructions."}
             </p>
           </div>
 
-          <form action="#" className="space-y-6" method="POST">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5 ml-1" htmlFor="email">Email Address</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MdEmail className="text-gray-400 text-xl" />
-                </div>
-                <input 
-                  className="block w-full pl-10 pr-3 py-3 border border-surface-border rounded-xl bg-background-dark text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow sm:text-sm" 
-                  id="email" 
-                  name="email" 
-                  placeholder="name@taskwise.ai" 
-                  required 
-                  type="email"
-                />
+          {isSuccess ? (
+            <div className="space-y-6">
+              <div className="bg-surface-border/30 rounded-xl p-4 text-center">
+                <p className="text-sm text-gray-300">
+                  Did not receive the email? Check your spam folder or <button className="text-primary hover:underline font-medium" onClick={() => setIsSuccess(false)}>try again</button>.
+                </p>
               </div>
             </div>
-            
-            <button 
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-background-dark bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-all duration-200 transform hover:-translate-y-0.5" 
-              type="submit"
-            >
-              Reset Password
-            </button>
-          </form>
+          ) : (
+            <form onSubmit={handleReset} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5 ml-1" htmlFor="email">Email Address</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MdEmail className="text-gray-400 text-xl" />
+                  </div>
+                  <input 
+                    className="block w-full pl-10 pr-3 py-3 border border-surface-border rounded-xl bg-background-dark text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow sm:text-sm" 
+                    id="email" 
+                    name="email" 
+                    placeholder="name@taskwise.ai" 
+                    required 
+                    type="email"
+                  />
+                </div>
+              </div>
+              
+              <button 
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-background-dark bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none" 
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <FaSpinner className="animate-spin h-5 w-5 text-background-dark" />
+                ) : (
+                  "Reset Password"
+                )}
+              </button>
+            </form>
+          )}
 
           <div className="mt-8 text-center">
             <Link 
