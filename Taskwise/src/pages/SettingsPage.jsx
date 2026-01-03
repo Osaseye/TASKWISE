@@ -1,162 +1,273 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
-import Header from '../components/dashboard/Header';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
 
 const SettingsPage = () => {
+  const [timezone, setTimezone] = useState('utc-8');
+  const [language, setLanguage] = useState('en');
+  const [darkMode, setDarkMode] = useState(true);
+  const [compactMode, setCompactMode] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(false);
+  const [marketingEmails, setMarketingEmails] = useState(false);
+  const [twoFactor, setTwoFactor] = useState(false);
+
   return (
-    <div className="flex h-screen bg-background-dark overflow-hidden">
+    <div className="flex h-screen bg-[#111717] text-white overflow-hidden font-display">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header title="Settings" />
-        
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth">
-          <div className="max-w-4xl mx-auto space-y-8">
-            
-            {/* Profile Card */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-surface-dark border border-white/5 rounded-2xl p-6 relative overflow-hidden group"
-            >
-              <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="material-symbols-outlined text-gray-400">edit</span>
+      {/* Main Content Area */}
+      <main className="flex-1 h-full overflow-y-auto relative flex flex-col items-center bg-[#111717]">
+        {/* Header Container */}
+        <div className="w-full max-w-[1024px] px-8 md:px-12 lg:px-16 py-8 flex flex-col gap-8">
+          
+          {/* Page Heading */}
+          <div className="flex flex-col gap-2 border-b border-[#293738] pb-6">
+            <h1 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-tight">Settings</h1>
+            <p className="text-text-subtle text-base font-normal">Manage your account preferences and configurations.</p>
+          </div>
+
+          {/* Profile Card */}
+          <Link to="/profile" className="group block">
+            <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex items-center gap-6 hover:border-primary/50 transition-all cursor-pointer relative overflow-hidden">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#1ec9d2] to-[#112021] flex items-center justify-center text-white text-xl font-bold border-2 border-[#293738] shadow-lg z-10">
+                AM
+              </div>
+              <div className="flex-1 z-10">
+                <h2 className="text-white text-xl font-bold group-hover:text-primary transition-colors">Alex Morgan</h2>
+                <p className="text-text-subtle text-sm">alex.morgan@example.com</p>
+              </div>
+              <div className="z-10 flex items-center gap-2">
+                <span className="text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">View Profile</span>
+                <span className="material-symbols-outlined text-text-subtle group-hover:text-primary transition-colors">chevron_right</span>
               </div>
               
-              <Link to="/profile" className="flex items-center gap-6 relative z-10">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-accent-blue to-primary flex items-center justify-center text-white text-2xl font-bold border-4 border-background-dark shadow-lg">
-                  AL
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white mb-1">Alex Doe</h2>
-                  <p className="text-gray-400 mb-3">alex.doe@example.com</p>
-                  <span className="inline-flex items-center gap-1 text-primary text-sm font-medium hover:underline">
-                    Manage Profile <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                  </span>
-                </div>
-              </Link>
-              
-              {/* Decorative background blur */}
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
-            </motion.div>
+              {/* Hover Effect Background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            </div>
+          </Link>
 
-            {/* Settings Sections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Appearance */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-surface-dark border border-white/5 rounded-2xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
-                    <span className="material-symbols-outlined">palette</span>
+          {/* Settings Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Regional Preferences */}
+            <div className="flex flex-col gap-4">
+              <h2 className="text-white text-lg font-bold px-1 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">public</span>
+                Regional
+              </h2>
+              <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex flex-col gap-6 h-full">
+                <label className="flex flex-col gap-2">
+                  <span className="text-white text-sm font-medium">Timezone</span>
+                  <div className="relative">
+                    <select 
+                      value={timezone}
+                      onChange={(e) => setTimezone(e.target.value)}
+                      className="w-full appearance-none rounded-lg bg-[#111717] border border-border-dark focus:border-primary focus:ring-1 focus:ring-primary text-white h-11 px-4 pr-10 transition-all cursor-pointer text-sm"
+                    >
+                      <option value="utc-8">Pacific Time (US & Canada)</option>
+                      <option value="utc-5">Eastern Time (US & Canada)</option>
+                      <option value="utc+0">London (GMT+00:00)</option>
+                      <option value="utc+1">Paris (GMT+01:00)</option>
+                    </select>
+                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none text-lg">expand_more</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white">Appearance</h3>
-                </div>
-                <p className="text-gray-400 text-sm mb-4">Customize the look and feel of your workspace.</p>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-background-dark border border-white/5">
-                  <span className="text-sm text-gray-300">Theme</span>
-                  <select className="bg-transparent text-sm text-white border-none focus:ring-0 cursor-pointer">
-                    <option>Dark Mode</option>
-                    <option>Light Mode</option>
-                    <option>System</option>
-                  </select>
-                </div>
-              </motion.div>
-
-              {/* Notifications */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-surface-dark border border-white/5 rounded-2xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400">
-                    <span className="material-symbols-outlined">notifications</span>
+                </label>
+                
+                <label className="flex flex-col gap-2">
+                  <span className="text-white text-sm font-medium">Language</span>
+                  <div className="relative">
+                    <select 
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full appearance-none rounded-lg bg-[#111717] border border-border-dark focus:border-primary focus:ring-1 focus:ring-primary text-white h-11 px-4 pr-10 transition-all cursor-pointer text-sm"
+                    >
+                      <option value="en">English (United States)</option>
+                      <option value="es">Español</option>
+                      <option value="fr">Français</option>
+                      <option value="de">Deutsch</option>
+                    </select>
+                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none text-lg">expand_more</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white">Notifications</h3>
-                </div>
-                <p className="text-gray-400 text-sm mb-4">Manage how you receive alerts and updates.</p>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Email Digest</span>
-                    <div className="w-10 h-5 bg-primary rounded-full relative cursor-pointer">
-                      <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Push Notifications</span>
-                    <div className="w-10 h-5 bg-gray-600 rounded-full relative cursor-pointer">
-                      <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Integrations */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-surface-dark border border-white/5 rounded-2xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
-                    <span className="material-symbols-outlined">extension</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white">Integrations</h3>
-                </div>
-                <p className="text-gray-400 text-sm mb-4">Connect with your favorite tools.</p>
-                <button className="w-full py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm text-white transition-colors">
-                  Manage Integrations
-                </button>
-              </motion.div>
-
-              {/* Account Security */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-surface-dark border border-white/5 rounded-2xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-green-500/10 text-green-400">
-                    <span className="material-symbols-outlined">security</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white">Security</h3>
-                </div>
-                <p className="text-gray-400 text-sm mb-4">Update password and security settings.</p>
-                <button className="w-full py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm text-white transition-colors">
-                  Change Password
-                </button>
-              </motion.div>
+                </label>
+              </div>
             </div>
 
-            {/* Danger Zone */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="border border-red-500/20 rounded-2xl p-6 bg-red-500/5"
-            >
-              <h3 className="text-lg font-semibold text-red-400 mb-2">Danger Zone</h3>
-              <div className="flex items-center justify-between">
-                <p className="text-gray-400 text-sm">Permanently delete your account and all data.</p>
-                <button className="px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-sm font-medium transition-colors">
+            {/* Appearance */}
+            <div className="flex flex-col gap-4">
+              <h2 className="text-white text-lg font-bold px-1 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">palette</span>
+                Appearance
+              </h2>
+              <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex flex-col gap-6 h-full">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-white text-sm font-medium">Dark Mode</span>
+                    <span className="text-xs text-text-subtle">Easier on the eyes in low light.</span>
+                  </div>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={darkMode}
+                      onChange={(e) => setDarkMode(e.target.checked)}
+                    />
+                    <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-[#293738]">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-white text-sm font-medium">Compact Mode</span>
+                    <span className="text-xs text-text-subtle">Show more content on screen.</span>
+                  </div>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={compactMode}
+                      onChange={(e) => setCompactMode(e.target.checked)}
+                    />
+                    <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Notifications */}
+            <div className="flex flex-col gap-4">
+              <h2 className="text-white text-lg font-bold px-1 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">notifications</span>
+                Notifications
+              </h2>
+              <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex flex-col gap-5 h-full">
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-sm font-medium">Email Alerts</span>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={emailNotifications}
+                      onChange={(e) => setEmailNotifications(e.target.checked)}
+                    />
+                    <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-sm font-medium">Push Notifications</span>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={pushNotifications}
+                      onChange={(e) => setPushNotifications(e.target.checked)}
+                    />
+                    <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-sm font-medium">Marketing Emails</span>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={marketingEmails}
+                      onChange={(e) => setMarketingEmails(e.target.checked)}
+                    />
+                    <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Security & Privacy */}
+            <div className="flex flex-col gap-4">
+              <h2 className="text-white text-lg font-bold px-1 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">security</span>
+                Security
+              </h2>
+              <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex flex-col gap-5 h-full">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-white text-sm font-medium">Two-Factor Auth</span>
+                    <span className="text-xs text-text-subtle">Add an extra layer of security.</span>
+                  </div>
+                  <label className="inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={twoFactor}
+                      onChange={(e) => setTwoFactor(e.target.checked)}
+                    />
+                    <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+                
+                <button className="w-full flex items-center justify-between p-3 rounded-lg bg-[#111717] border border-border-dark hover:border-primary/50 transition-colors group text-sm">
+                  <span className="text-white font-medium">Change Password</span>
+                  <span className="material-symbols-outlined text-text-subtle text-base group-hover:text-primary">arrow_forward</span>
+                </button>
+
+                <button className="w-full flex items-center justify-between p-3 rounded-lg bg-[#111717] border border-border-dark hover:border-primary/50 transition-colors group text-sm">
+                  <span className="text-white font-medium">Active Sessions</span>
+                  <span className="material-symbols-outlined text-text-subtle text-base group-hover:text-primary">devices</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Data & Support */}
+            <div className="flex flex-col gap-4">
+              <h2 className="text-white text-lg font-bold px-1 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">database</span>
+                Data & Support
+              </h2>
+              <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex flex-col gap-4 h-full">
+                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#111717] transition-colors text-left">
+                  <span className="material-symbols-outlined text-text-subtle">download</span>
+                  <span className="text-white text-sm font-medium">Export My Data</span>
+                </button>
+                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#111717] transition-colors text-left">
+                  <span className="material-symbols-outlined text-text-subtle">help</span>
+                  <span className="text-white text-sm font-medium">Help Center</span>
+                </button>
+                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#111717] transition-colors text-left">
+                  <span className="material-symbols-outlined text-text-subtle">bug_report</span>
+                  <span className="text-white text-sm font-medium">Report a Bug</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Account Actions (Redesigned) */}
+            <div className="flex flex-col gap-4">
+              <h2 className="text-white text-lg font-bold px-1 flex items-center gap-2">
+                <span className="material-symbols-outlined text-red-400">warning</span>
+                Danger Zone
+              </h2>
+              <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6 flex flex-col justify-center gap-4 h-full">
+                <button className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-[#111717] border border-border-dark hover:bg-[#1c2626] transition-colors text-sm font-medium text-white">
+                  <span className="material-symbols-outlined text-base">logout</span>
+                  Log Out
+                </button>
+                
+                <button className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors text-sm font-medium text-red-400">
+                  <span className="material-symbols-outlined text-base">delete</span>
                   Delete Account
                 </button>
               </div>
-            </motion.div>
+            </div>
 
           </div>
-        </main>
-      </div>
+
+          <div className="text-center text-xs text-text-subtle pb-24">
+            <p>TASKWISE v1.0.2 • © 2026 Taskwise Inc.</p>
+          </div>
+
+        </div>
+      </main>
+
       <AIAssistantButton />
     </div>
   );
