@@ -6,6 +6,7 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import QuickActionModal from './QuickActionModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from 'react-loading-skeleton';
+import { isToday, parseISO, isPast, isSameDay } from 'date-fns';
 
 const TodaysFocus = ({ loading }) => {
   const { tasks, toggleTask, addTask, updateTask, deleteTask } = useTasks();
@@ -105,6 +106,24 @@ const TodaysFocus = ({ loading }) => {
   // Filter and Sort Logic
   const getProcessedTasks = () => {
     let processed = [...tasks];
+
+    // Filter by Date (Today or Overdue)
+    processed = processed.filter(t => {
+        if (!t.dueDate) return false; // Skip tasks with no due date
+        
+        const date = typeof t.dueDate === 'string' ? parseISO(t.dueDate) : 
+                     t.dueDate.toDate ? t.dueDate.toDate() : new Date(t.dueDate);
+        
+        // Show if today
+        if (isToday(date)) return true;
+        
+        // Optional: Show overdue tasks if not completed?
+        // For "Today's Focus", usually we want to see what we need to do today.
+        // If it's overdue and not completed, it should probably be here too.
+        if (isPast(date) && !isSameDay(date, new Date()) && !t.completed) return true;
+
+        return false;
+    });
 
     // Filter
     if (filterType === 'active') processed = processed.filter(t => !t.completed);

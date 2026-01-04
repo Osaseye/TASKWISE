@@ -5,7 +5,7 @@ const TOGETHER_MODEL = "mistralai/Mixtral-8x7B-Instruct-v0.1";
 /**
  * Helper to call Together AI API
  */
-async function callTogetherAI(prompt, systemContext = "") {
+async function callTogetherAI(prompt, systemContext = "", maxTokens = 2500) {
   const apiKey = import.meta.env.VITE_TOGETHER_API_KEY;
   
   if (!apiKey) {
@@ -26,7 +26,7 @@ async function callTogetherAI(prompt, systemContext = "") {
           { role: "system", content: systemContext },
           { role: "user", content: prompt }
         ],
-        max_tokens: 500,
+        max_tokens: maxTokens,
         temperature: 0.7,
       }),
     });
@@ -159,9 +159,16 @@ ${tasksSummary}
     const conversationHistory = history.map(h => `${h.role === 'user' ? 'User' : 'Assistant'}: ${h.content}`).join('\n');
     
     const systemContext = `
-You are TaskWise AI, a helpful and friendly productivity assistant.
-You help users plan their day, manage tasks, and study schedules.
-Keep your answers concise and encouraging.
+You are TaskWise AI, a productivity assistant created by Segun.
+
+Guidelines:
+1. **No Repetition**: Do NOT introduce yourself ("I'm TaskWise...") unless explicitly asked "Who are you?".
+2. **Conciseness**: Be brief and direct. Avoid fluff.
+3. **Formatting**: Use Markdown (bullet points, bold text) to structure your responses.
+4. **Capabilities**: You HAVE a GUI. You can generate interactive plans, tasks, and schedules. If a user asks for a plan, you generate it (the system handles the UI). Do NOT say you "don't have a GUI".
+5. **Spelling**: Ensure perfect spelling.
+
+Current Date: ${new Date().toDateString()}
 
 Conversation History:
 ${conversationHistory}
@@ -174,6 +181,46 @@ ${conversationHistory}
     }
 
     return aiService.chatFallback(message);
+  },
+
+  /**
+   * Generate a structured plan (list of tasks) from a user request
+   */
+  generatePlan: async (request) => {
+    const systemContext = `
+You are a scheduler API. Your ONLY job is to return a valid JSON array.
+Do NOT return any conversational text. Do NOT use markdown code blocks. Just the raw JSON array.
+
+Task Object Structure:
+{
+  "day": "string" (e.g., "Day 1", "Monday", "2024-01-01"),
+  "title": "string",
+  "time": "HH:MM" (24h format) or "Anytime",
+  "duration": number (minutes),
+  "priority": "High" | "Medium" | "Low",
+  "category": "string"
+}
+
+Generate the FULL plan for the requested duration. Do not truncate.
+If the user asks for 2 weeks, generate 14 days of tasks.
+Ensure "day" fields are consistent (e.g., "Day 1", "Day 2").
+
+Example Input: "Plan a morning routine"
+Example Output:
+[{"day":"Day 1","title":"Wake up","time":"07:00","duration":15,"priority":"High","category":"Health"},{"day":"Day 1","title":"Exercise","time":"07:15","duration":30,"priority":"Medium","category":"Health"}]
+`;
+
+    const response = await callTogetherAI(request, systemContext, 3000);
+
+    if (response) {
+      try {
+        const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+      } catch (e) {
+        console.error("Failed to parse plan generation response", e);
+      }
+    }
+    return null;
   },
 
   chatFallback: (message) => {

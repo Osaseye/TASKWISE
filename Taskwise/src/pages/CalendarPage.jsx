@@ -47,14 +47,31 @@ const CalendarPage = () => {
         startDate = task.createdAt.toDate ? task.createdAt.toDate() : new Date(task.createdAt);
       }
 
+      let endDate = new Date(startDate);
+      let isAllDay = true;
+
+      // Check if task has specific time
+      if (task.time && task.time.includes(':')) {
+          isAllDay = false;
+          const [h, m] = task.time.split(':');
+          startDate.setHours(parseInt(h), parseInt(m), 0, 0);
+          endDate = new Date(startDate);
+          endDate.setHours(startDate.getHours() + 1);
+      } else if (startDate.getHours() !== 0 || startDate.getMinutes() !== 0) {
+          // If the date object itself has time info (and it's not midnight)
+          isAllDay = false;
+          endDate = new Date(startDate);
+          endDate.setHours(startDate.getHours() + 1);
+      }
+
       return {
         id: task.id,
         title: task.title,
         start: startDate,
-        end: startDate, // Single day event
+        end: endDate, 
         type: task.priority?.toLowerCase() || 'medium',
-        allDay: true,
-        recurrence: task.recurrence // Pass recurrence info if needed for styling
+        allDay: isAllDay,
+        recurrence: task.recurrence 
       };
     });
     setEvents(mappedEvents);

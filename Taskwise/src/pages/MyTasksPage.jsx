@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTasks } from '../context/TaskContext';
 import { aiService } from '../services/aiService';
+import { isToday, isTomorrow, isThisWeek, isPast, parseISO } from 'date-fns';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
 import MobileNavbar from '../components/dashboard/MobileNavbar';
@@ -28,6 +29,7 @@ const MyTasksPage = () => {
   // Filter & Sort States
   const [sortType, setSortType] = useState('default'); // default, priority, time
   const [filterType, setFilterType] = useState('all'); // all, active, completed
+  const [dateFilter, setDateFilter] = useState('all'); // all, today, tomorrow, week, overdue
   const [categoryFilter, setCategoryFilter] = useState('All');
 
   // Close dropdown when clicking outside
@@ -96,6 +98,20 @@ const MyTasksPage = () => {
 
     // Filter by Status
     if (filterType === 'active') processed = processed.filter(t => !t.completed);
+
+    // Filter by Date
+    if (dateFilter !== 'all') {
+        processed = processed.filter(t => {
+            if (!t.dueDate) return false;
+            const date = typeof t.dueDate === 'string' ? parseISO(t.dueDate) : new Date(t.dueDate);
+            
+            if (dateFilter === 'today') return isToday(date);
+            if (dateFilter === 'tomorrow') return isTomorrow(date);
+            if (dateFilter === 'week') return isThisWeek(date);
+            if (dateFilter === 'overdue') return isPast(date) && !isToday(date);
+            return true;
+        });
+    }
     if (filterType === 'completed') processed = processed.filter(t => t.completed);
 
     // Filter by Category
@@ -212,12 +228,20 @@ const MyTasksPage = () => {
                 <span className="text-xs font-medium">Category: {categoryFilter}</span>
                 <span className="material-symbols-outlined text-[16px]">folder</span>
               </button>
+
+              <button 
+                onClick={() => setDateFilter(prev => prev === 'all' ? 'today' : prev === 'today' ? 'tomorrow' : prev === 'tomorrow' ? 'week' : prev === 'week' ? 'overdue' : 'all')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all group ${dateFilter !== 'all' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-surface-hover border-transparent text-text-secondary hover:text-white'}`}
+              >
+                <span className="text-xs font-medium">Date: {dateFilter.charAt(0).toUpperCase() + dateFilter.slice(1)}</span>
+                <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+              </button>
               
-              {(filterType !== 'all' || sortType !== 'default' || categoryFilter !== 'All') && (
+              {(filterType !== 'all' || sortType !== 'default' || categoryFilter !== 'All' || dateFilter !== 'all') && (
                 <>
                   <div className="h-4 w-px bg-[#3d5152] mx-1"></div>
                   <button 
-                    onClick={() => { setFilterType('all'); setSortType('default'); setCategoryFilter('All'); }}
+                    onClick={() => { setFilterType('all'); setSortType('default'); setCategoryFilter('All'); setDateFilter('all'); }}
                     className="text-xs font-medium text-primary hover:text-white transition-colors"
                   >
                     Clear Filters
