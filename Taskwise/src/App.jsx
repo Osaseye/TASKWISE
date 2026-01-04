@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AnimatePresence } from 'framer-motion';
 import { UIProvider } from './context/UIContext';
 import AIAssistantSidebar from './components/dashboard/AIAssistantSidebar';
+import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -16,6 +17,7 @@ import MyTasksPage from './pages/MyTasksPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -23,20 +25,24 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/onboarding/step1" element={<OnboardingStep1 />} />
-        <Route path="/onboarding/step2" element={<OnboardingStep2 />} />
-        <Route path="/onboarding/step3" element={<OnboardingStep3 />} />
-        <Route path="/onboarding/step4" element={<OnboardingStep4 />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/tasks" element={<MyTasksPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
+
+        {/* Protected Routes */}
+        <Route path="/onboarding/step1" element={<ProtectedRoute><OnboardingStep1 /></ProtectedRoute>} />
+        <Route path="/onboarding/step2" element={<ProtectedRoute><OnboardingStep2 /></ProtectedRoute>} />
+        <Route path="/onboarding/step3" element={<ProtectedRoute><OnboardingStep3 /></ProtectedRoute>} />
+        <Route path="/onboarding/step4" element={<ProtectedRoute><OnboardingStep4 /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+        <Route path="/tasks" element={<ProtectedRoute><MyTasksPage /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
       </Routes>
     </AnimatePresence>
   );

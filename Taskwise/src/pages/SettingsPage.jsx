@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
 import MobileNavbar from '../components/dashboard/MobileNavbar';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { useAuth } from '../context/AuthContext';
+import { useUser } from '../context/UserContext';
 
 const SettingsPage = () => {
+  const { currentUser, logout } = useAuth();
+  const { userProfile, updateUserProfile, loading: userLoading } = useUser();
+  const navigate = useNavigate();
+
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Settings State
   const [timezone, setTimezone] = useState('utc-8');
   const [language, setLanguage] = useState('en');
   const [darkMode, setDarkMode] = useState(true);
@@ -16,6 +24,57 @@ const SettingsPage = () => {
   const [pushNotifications, setPushNotifications] = useState(false);
   const [marketingEmails, setMarketingEmails] = useState(false);
   const [twoFactor, setTwoFactor] = useState(false);
+
+  useEffect(() => {
+    if (!userLoading && userProfile) {
+      setIsLoading(false);
+      // Load settings from profile if they exist
+      if (userProfile.settings) {
+        setTimezone(userProfile.settings.timezone || 'utc-8');
+        setLanguage(userProfile.settings.language || 'en');
+        setDarkMode(userProfile.settings.darkMode ?? true);
+        setCompactMode(userProfile.settings.compactMode ?? false);
+        setEmailNotifications(userProfile.settings.emailNotifications ?? true);
+        setPushNotifications(userProfile.settings.pushNotifications ?? false);
+        setMarketingEmails(userProfile.settings.marketingEmails ?? false);
+        setTwoFactor(userProfile.settings.twoFactor ?? false);
+      }
+    } else if (!userLoading && !userProfile) {
+       setIsLoading(false);
+    }
+  }, [userLoading, userProfile]);
+
+  const handleSettingChange = async (key, value) => {
+    // Update local state
+    switch(key) {
+      case 'timezone': setTimezone(value); break;
+      case 'language': setLanguage(value); break;
+      case 'darkMode': setDarkMode(value); break;
+      case 'compactMode': setCompactMode(value); break;
+      case 'emailNotifications': setEmailNotifications(value); break;
+      case 'pushNotifications': setPushNotifications(value); break;
+      case 'marketingEmails': setMarketingEmails(value); break;
+      case 'twoFactor': setTwoFactor(value); break;
+    }
+
+    // Save to Firestore
+    try {
+      await updateUserProfile({
+        [`settings.${key}`]: value
+      });
+    } catch (error) {
+      console.error("Failed to save setting:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Failed to log out", error);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -54,11 +113,11 @@ const SettingsPage = () => {
               <Link to="/profile" className="group block">
                 <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex items-center gap-6 hover:border-primary/50 transition-all cursor-pointer relative overflow-hidden">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#1ec9d2] to-[#112021] flex items-center justify-center text-white text-xl font-bold border-2 border-[#293738] shadow-lg z-10">
-                    AM
+                    {currentUser?.email?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <div className="flex-1 z-10">
-                    <h2 className="text-white text-xl font-bold group-hover:text-primary transition-colors">Alex Morgan</h2>
-                    <p className="text-text-subtle text-sm">alex.morgan@example.com</p>
+                    <h2 className="text-white text-xl font-bold group-hover:text-primary transition-colors">{currentUser?.displayName || 'User'}</h2>
+                    <p className="text-text-subtle text-sm">{currentUser?.email || 'user@example.com'}</p>
                   </div>
                   <div className="z-10 flex items-center gap-2">
                     <span className="text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">View Profile</span>
@@ -98,7 +157,7 @@ const SettingsPage = () => {
                         <div className="relative">
                           <select 
                             value={timezone}
-                            onChange={(e) => setTimezone(e.target.value)}
+                            onChange={(e) => handleSettingChange('timezone', e.target.value)}
                             className="w-full appearance-none rounded-lg bg-[#111717] border border-border-dark focus:border-primary focus:ring-1 focus:ring-primary text-white h-11 px-4 pr-10 transition-all cursor-pointer text-sm"
                           >
                             <option value="utc-8">Pacific Time (US & Canada)</option>
@@ -115,7 +174,7 @@ const SettingsPage = () => {
                         <div className="relative">
                           <select 
                             value={language}
-                            onChange={(e) => setLanguage(e.target.value)}
+                            onChange={(e) => handleSettingChange('language', e.target.value)}
                             className="w-full appearance-none rounded-lg bg-[#111717] border border-border-dark focus:border-primary focus:ring-1 focus:ring-primary text-white h-11 px-4 pr-10 transition-all cursor-pointer text-sm"
                           >
                             <option value="en">English (United States)</option>
@@ -146,7 +205,7 @@ const SettingsPage = () => {
                             type="checkbox" 
                             className="sr-only peer"
                             checked={darkMode}
-                            onChange={(e) => setDarkMode(e.target.checked)}
+                            onChange={(e) => handleSettingChange('darkMode', e.target.checked)}
                           />
                           <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                         </label>
@@ -162,7 +221,7 @@ const SettingsPage = () => {
                             type="checkbox" 
                             className="sr-only peer"
                             checked={compactMode}
-                            onChange={(e) => setCompactMode(e.target.checked)}
+                            onChange={(e) => handleSettingChange('compactMode', e.target.checked)}
                           />
                           <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                         </label>
@@ -184,7 +243,7 @@ const SettingsPage = () => {
                             type="checkbox" 
                             className="sr-only peer"
                             checked={emailNotifications}
-                            onChange={(e) => setEmailNotifications(e.target.checked)}
+                            onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
                           />
                           <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                         </label>
@@ -197,7 +256,7 @@ const SettingsPage = () => {
                             type="checkbox" 
                             className="sr-only peer"
                             checked={pushNotifications}
-                            onChange={(e) => setPushNotifications(e.target.checked)}
+                            onChange={(e) => handleSettingChange('pushNotifications', e.target.checked)}
                           />
                           <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                         </label>
@@ -210,7 +269,7 @@ const SettingsPage = () => {
                             type="checkbox" 
                             className="sr-only peer"
                             checked={marketingEmails}
-                            onChange={(e) => setMarketingEmails(e.target.checked)}
+                            onChange={(e) => handleSettingChange('marketingEmails', e.target.checked)}
                           />
                           <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                         </label>
@@ -235,7 +294,7 @@ const SettingsPage = () => {
                             type="checkbox" 
                             className="sr-only peer"
                             checked={twoFactor}
-                            onChange={(e) => setTwoFactor(e.target.checked)}
+                            onChange={(e) => handleSettingChange('twoFactor', e.target.checked)}
                           />
                           <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                         </label>
@@ -282,7 +341,10 @@ const SettingsPage = () => {
                       Danger Zone
                     </h2>
                     <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-6 flex flex-col justify-center gap-4 h-full">
-                      <button className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-[#111717] border border-border-dark hover:bg-[#1c2626] transition-colors text-sm font-medium text-white">
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-[#111717] border border-border-dark hover:bg-[#1c2626] transition-colors text-sm font-medium text-white"
+                      >
                         <span className="material-symbols-outlined text-base">logout</span>
                         Log Out
                       </button>

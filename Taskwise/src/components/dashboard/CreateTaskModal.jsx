@@ -7,19 +7,24 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
     date: '',
     time: '',
     priority: 'Medium',
-    category: 'General'
+    category: 'General',
+    recurrence: 'none'
   });
 
   useEffect(() => {
     if (isOpen && initialData) {
-      setTaskData(initialData);
+      setTaskData({
+        ...initialData,
+        recurrence: initialData.recurrence?.type || 'none'
+      });
     } else if (isOpen && !initialData) {
       setTaskData({
         title: '',
         date: new Date().toISOString().split('T')[0], // Default to today
         time: '',
         priority: 'Medium',
-        category: 'General'
+        category: 'General',
+        recurrence: 'none'
       });
     }
   }, [isOpen, initialData]);
@@ -31,14 +36,19 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onConfirm(taskData);
+    const submissionData = {
+      ...taskData,
+      recurrence: taskData.recurrence === 'none' ? null : { type: taskData.recurrence, interval: 1 }
+    };
+    onConfirm(submissionData);
     if (!initialData) {
       setTaskData({
         title: '',
         date: '',
         time: '',
         priority: 'Medium',
-        category: 'General'
+        category: 'General',
+        recurrence: 'none'
       });
     }
   };
@@ -107,18 +117,38 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-text-secondary mb-1.5">Category</label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">folder</span>
-                    <input
-                      type="text"
-                      name="category"
-                      value={taskData.category}
-                      onChange={handleChange}
-                      placeholder="e.g. Work"
-                      className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
-                    />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1.5">Category</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">folder</span>
+                      <input
+                        type="text"
+                        name="category"
+                        value={taskData.category}
+                        onChange={handleChange}
+                        placeholder="e.g. Work"
+                        className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1.5">Recurrence</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">repeat</span>
+                      <select
+                        name="recurrence"
+                        value={taskData.recurrence}
+                        onChange={handleChange}
+                        className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors appearance-none"
+                      >
+                        <option value="none">None</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                      <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px] pointer-events-none">expand_more</span>
+                    </div>
                   </div>
                 </div>
 

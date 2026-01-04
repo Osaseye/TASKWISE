@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { MdCheckCircle, MdRadioButtonUnchecked, MdArrowForward, MdArrowBack } from 'react-icons/md';
+import { useUser } from '../../context/UserContext';
 
 const goals = [
   "Increase Productivity",
@@ -15,6 +16,7 @@ const goals = [
 const OnboardingStep3 = () => {
   const [selectedGoals, setSelectedGoals] = useState([]);
   const navigate = useNavigate();
+  const { updateOnboardingData } = useUser();
 
   const toggleGoal = (goal) => {
     if (selectedGoals.includes(goal)) {
@@ -25,7 +27,10 @@ const OnboardingStep3 = () => {
   };
 
   const handleContinue = () => {
-    navigate('/onboarding/step4');
+    if (selectedGoals.length > 0) {
+      updateOnboardingData({ goals: selectedGoals });
+      navigate('/onboarding/step4');
+    }
   };
 
   const handleBack = () => {

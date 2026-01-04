@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { MdBadge, MdAutoAwesome, MdArrowForward } from 'react-icons/md';
+import { useUser } from '../../context/UserContext';
 
 const OnboardingStep1 = () => {
   const [name, setName] = useState('');
   const navigate = useNavigate();
+  const { updateOnboardingData } = useUser();
 
   const handleContinue = () => {
-    navigate('/onboarding/step2');
+    if (name.trim()) {
+      updateOnboardingData({ name });
+      navigate('/onboarding/step2');
+    }
   };
 
   return (

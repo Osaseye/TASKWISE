@@ -15,7 +15,7 @@ const Footer = () => {
             </p>
           </div>
           <div>
-            <h4 className="text-white font-bold mb-4">Product</h4>
+            <h4 className="text-white font-bold mb-4">Product</h4>    
             <ul className="space-y-2 text-sm text-gray-400">
               <li><a className="hover:text-primary transition-colors" href="#">Features</a></li>
               <li><a className="hover:text-primary transition-colors" href="#">Download</a></li>

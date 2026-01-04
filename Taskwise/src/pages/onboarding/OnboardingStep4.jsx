@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { MdTimer, MdAccessTime, MdGroup, MdDashboard, MdArrowForward, MdArrowBack, MdCheck } from 'react-icons/md';
+import { useUser } from '../../context/UserContext';
+import { FaSpinner } from 'react-icons/fa';
 
 const styles = [
   { id: 'deep', label: 'Deep Work', description: 'Long, uninterrupted sessions', icon: MdTimer },
@@ -12,11 +14,26 @@ const styles = [
 
 const OnboardingStep4 = () => {
   const [selectedStyle, setSelectedStyle] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
+  const { updateOnboardingData, saveOnboardingData } = useUser();
 
-  const handleComplete = () => {
-    // Here you would typically save all onboarding data
-    navigate('/dashboard'); // Navigate to dashboard/home
+  const handleComplete = async () => {
+    if (!selectedStyle) return;
+    
+    setIsSaving(true);
+    try {
+      // Update the last piece of data
+      updateOnboardingData({ workStyle: selectedStyle });
+      
+      // Save everything to Firestore
+      await saveOnboardingData();
+      
+      navigate('/dashboard');
+    } catch (error) {
+      console.error("Failed to complete onboarding:", error);
+      setIsSaving(false);
+    }
   };
 
   const handleBack = () => {
@@ -141,11 +158,20 @@ const OnboardingStep4 = () => {
               </button>
               <button 
                 onClick={handleComplete}
-                disabled={!selectedStyle}
+                disabled={!selectedStyle || isSaving}
                 className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-cyan-400 text-white dark:text-background-dark font-bold rounded-xl transition-all duration-200 transform active:scale-[0.98] shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Complete Setup
-                <MdArrowForward className="group-hover:translate-x-1 transition-transform text-xl" />
+                {isSaving ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    <span>Setting up...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Complete Setup</span>
+                    <MdArrowForward className="group-hover:translate-x-1 transition-transform text-xl" />
+                  </>
+                )}
               </button>
             </motion.div>
           </div>

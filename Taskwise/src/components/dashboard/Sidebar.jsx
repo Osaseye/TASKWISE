@@ -1,11 +1,25 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useUI } from '../../context/UIContext';
+import { useAuth } from '../../context/AuthContext';
+import { useUser } from '../../context/UserContext';
 
 const Sidebar = () => {
   const { isSidebarCollapsed, toggleSidebar } = useUI();
+  const { currentUser, logout } = useAuth();
+  const { userProfile } = useUser();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Failed to log out", error);
+    }
+  };
 
   const navItems = [
     { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },
@@ -16,6 +30,8 @@ const Sidebar = () => {
   ];
 
   const isActive = (path) => location.pathname === path;
+  
+  const displayName = userProfile?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
 
   return (
     <motion.aside 
@@ -89,18 +105,29 @@ const Sidebar = () => {
 
       <div className="p-4 border-t border-[#293738]">
         <div className={`flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#293738] cursor-pointer transition-colors ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-blue to-primary flex items-center justify-center text-white text-xs font-bold border border-white/10 shrink-0">AL</div>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-blue to-primary flex items-center justify-center text-white text-xs font-bold border border-white/10 shrink-0">
+            {displayName.charAt(0).toUpperCase()}
+          </div>
           {!isSidebarCollapsed && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex flex-col overflow-hidden"
             >
-              <p className="text-white text-sm font-medium leading-none truncate">Alex Doe</p>
+              <p className="text-white text-sm font-medium leading-none truncate">{displayName}</p>
             </motion.div>
           )}
-          {!isSidebarCollapsed && <span className="material-symbols-outlined text-text-secondary ml-auto text-[18px]">settings</span>}
+          {!isSidebarCollapsed && (
+            <button onClick={handleLogout} className="ml-auto text-text-secondary hover:text-red-400 transition-colors" title="Logout">
+              <span className="material-symbols-outlined text-[18px]">logout</span>
+            </button>
+          )}
         </div>
+        {isSidebarCollapsed && (
+           <button onClick={handleLogout} className="mt-2 w-full flex justify-center text-text-secondary hover:text-red-400 transition-colors" title="Logout">
+             <span className="material-symbols-outlined text-[18px]">logout</span>
+           </button>
+        )}
       </div>
     </motion.aside>
   );

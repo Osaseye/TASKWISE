@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTasks } from '../context/TaskContext';
+import { aiService } from '../services/aiService';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
 import MobileNavbar from '../components/dashboard/MobileNavbar';
@@ -9,13 +11,8 @@ import DeleteConfirmationModal from '../components/dashboard/DeleteConfirmationM
 import QuickActionModal from '../components/dashboard/QuickActionModal';
 
 const MyTasksPage = () => {
-  // Local state for tasks (simulating context for this page)
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Review Q3 Financial Reports', priority: 'High', category: 'Work', completed: false, time: '10:00 AM' },
-    { id: 2, title: 'Schedule Dentist Appointment', priority: 'Low', category: 'Personal', completed: false, time: '2:00 PM' },
-    { id: 3, title: 'Draft Project Proposal', priority: 'Medium', category: 'Work', completed: false, time: '11:30 AM' },
-    { id: 4, title: 'Morning Standup Meeting', priority: 'None', category: 'Work', completed: true, time: '9:00 AM' },
-  ]);
+  // Use global task context
+  const { tasks, addTask, toggleTask, deleteTask, updateTask } = useTasks();
 
   const [newTaskInput, setNewTaskInput] = useState('');
   const [isAiProcessing, setIsAiProcessing] = useState(false);
@@ -45,60 +42,46 @@ const MyTasksPage = () => {
 
     setIsAiProcessing(true);
     
-    // Simulate AI NLP processing
-    setTimeout(() => {
+    try {
+      const parsedTask = await aiService.parseTaskCommand(newTaskInput);
+      setEditingTask(parsedTask);
+    } catch (error) {
+      console.error("AI parsing failed", error);
+    } finally {
       setIsAiProcessing(false);
-      // Open modal with "parsed" data
-      setEditingTask({
-        title: newTaskInput,
-        priority: 'Medium', // Simulated default/inferred
-        category: 'Work',   // Simulated default/inferred
-        time: '',
-      });
       setNewTaskInput('');
-    }, 1500);
+    }
   };
 
   const handleSaveTask = (taskData) => {
     if (editingTask && editingTask.id) {
       // Update existing
-      setTasks(tasks.map(t => t.id === editingTask.id ? { ...t, ...taskData } : t));
+      updateTask(editingTask.id, taskData);
       setEditingTask(null);
     } else {
       // Create new
-      const newTask = {
-        id: Date.now(),
-        completed: false,
-        ...taskData
-      };
-      setTasks([newTask, ...tasks]);
+      addTask({
+        ...taskData,
+        completed: false
+      });
       setEditingTask(null);
       setIsCreateModalOpen(false);
     }
   };
 
-  const toggleTask = (id) => {
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
-  };
+  // toggleTask is now from context
 
   const handleDeleteConfirm = () => {
     if (deletingTask) {
-      setTasks(tasks.filter(t => t.id !== deletingTask.id));
+      deleteTask(deletingTask.id);
       setDeletingTask(null);
     }
   };
 
   const handleQuickActionConfirm = (value) => {
     if (quickAction) {
-      setTasks(tasks.map(t => {
-        if (t.id === quickAction.task.id) {
-          if (quickAction.type === 'date') return { ...t, time: value };
-          if (quickAction.type === 'priority') return { ...t, priority: value };
-        }
-        return t;
-      }));
+      if (quickAction.type === 'date') updateTask(quickAction.task.id, { time: value });
+      if (quickAction.type === 'priority') updateTask(quickAction.task.id, { priority: value });
       setQuickAction(null);
     }
   };
@@ -288,6 +271,12 @@ const MyTasksPage = () => {
                           <span className="flex items-center gap-1 text-[10px] text-text-secondary">
                             <span className="material-symbols-outlined text-[12px]">folder</span>
                             {task.category}
+                          </span>
+                        )}
+                        {task.recurrence && (
+                          <span className="flex items-center gap-1 text-[10px] text-text-secondary" title={`Repeats ${task.recurrence.type}`}>
+                            <span className="material-symbols-outlined text-[12px]">repeat</span>
+                            {task.recurrence.type}
                           </span>
                         )}
                       </div>

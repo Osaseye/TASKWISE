@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
 import MobileNavbar from '../components/dashboard/MobileNavbar';
@@ -9,8 +10,9 @@ import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek'; 
 import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
-import { addDays, isSameDay, isToday } from 'date-fns';
+import { addDays, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { useTasks } from '../context/TaskContext';
 
 const locales = {
   'en-US': enUS,
@@ -24,38 +26,39 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-const initialEvents = [
-  {
-    id: 1,
-    title: 'Strategy Sync',
-    start: new Date(new Date().setHours(10, 0, 0, 0)), // Today 10:00 AM
-    end: new Date(new Date().setHours(11, 0, 0, 0)),
-    type: 'high',
-  },
-  {
-    id: 2,
-    title: 'Design Review',
-    start: new Date(new Date().setDate(new Date().getDate() + 2)), // 2 days from now
-    end: new Date(new Date(new Date().setDate(new Date().getDate() + 2)).setHours(14, 30, 0, 0)),
-    type: 'medium',
-  },
-  {
-    id: 3,
-    title: 'Focus Time',
-    start: new Date(new Date().setDate(new Date().getDate() + 4)), // 4 days from now
-    end: new Date(new Date(new Date().setDate(new Date().getDate() + 4)).setHours(17, 0, 0, 0)),
-    type: 'low',
-  },
-];
-
 const CalendarPage = () => {
-  const [events, setEvents] = useState(initialEvents);
+  const { tasks } = useTasks();
+  const [events, setEvents] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [newEventData, setNewEventData] = useState({ title: '', type: 'medium', category: 'Work' });
   const [date, setDate] = useState(new Date()); // Start on Today
   const [view, setView] = useState('week');
+
+  // Map tasks to calendar events
+  useEffect(() => {
+    const mappedEvents = tasks.map(task => {
+      // Determine start date: prefer dueDate, fallback to createdAt, then today
+      let startDate = new Date();
+      if (task.dueDate) {
+        startDate = new Date(task.dueDate);
+      } else if (task.createdAt) {
+        startDate = task.createdAt.toDate ? task.createdAt.toDate() : new Date(task.createdAt);
+      }
+
+      return {
+        id: task.id,
+        title: task.title,
+        start: startDate,
+        end: startDate, // Single day event
+        type: task.priority?.toLowerCase() || 'medium',
+        allDay: true,
+        recurrence: task.recurrence // Pass recurrence info if needed for styling
+      };
+    });
+    setEvents(mappedEvents);
+  }, [tasks]);
 
   // Mobile Calendar Logic
   const [mobileSelectedDate, setMobileSelectedDate] = useState(new Date());
@@ -93,13 +96,9 @@ const CalendarPage = () => {
   };
 
   const handleCreateEvent = () => {
-    if (newEventData.id) {
-      setEvents(events.map(e => e.id === newEventData.id ? newEventData : e));
-    } else {
-      setEvents([...events, { ...newEventData, id: Date.now() }]);
-    }
+    // In a real app, this would call addTask from TaskContext
+    // For now, we just close the modal as we are focusing on empty state
     setIsCreateModalOpen(false);
-    setNewEventData({ title: '', type: 'medium', category: 'Work' });
   };
 
   const handleDeleteEvent = () => {
@@ -172,7 +171,7 @@ const CalendarPage = () => {
         <div className="custom-event-time text-[10px] opacity-80 truncate flex items-center gap-1">
           <span className="material-symbols-outlined text-[10px]">schedule</span>
           {format(event.start, 'h:mm')} - {format(event.end, 'h:mm a')}
-        </div>okay ow 
+        </div>
       </div>
     );
   };
@@ -227,6 +226,16 @@ const CalendarPage = () => {
         ::-webkit-scrollbar-thumb { background: #293738; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #5f7475; }
 
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+
         /* Month View Specifics */
         .rbc-month-view .rbc-event {
           padding: 0 !important;
@@ -269,86 +278,138 @@ const CalendarPage = () => {
         className="flex-1 flex flex-col h-full overflow-hidden relative"
       >
         {/* Mobile View */}
-        <div className="md:hidden flex flex-col h-full pb-32 overflow-hidden bg-background-dark">
-            {/* Header */}
-            <div className="p-6 pb-2">
-                <h1 className="text-2xl font-bold text-white mb-1">Calendar</h1>
-                <p className="text-[#9eb6b7] text-sm">{format(mobileSelectedDate, 'MMMM yyyy')}</p>
-            </div>
-
-            {/* Date Scroller */}
-            <div 
-                ref={scrollRef}
-                className="flex overflow-x-auto gap-3 px-6 py-4 no-scrollbar snap-x snap-mandatory"
-            >
-                {mobileDates.map((d, i) => {
-                    const isSelected = isSameDay(d, mobileSelectedDate);
-                    const isTodayDate = isToday(d);
-                    return (
-                        <div 
-                            key={i}
-                            onClick={() => setMobileSelectedDate(d)}
-                            className={`flex-shrink-0 w-[60px] h-[80px] rounded-2xl flex flex-col items-center justify-center gap-1 snap-center transition-all cursor-pointer border ${
-                                isSelected 
-                                    ? 'bg-primary text-[#111717] border-primary shadow-[0_0_15px_rgba(30,201,210,0.4)]' 
-                                    : isTodayDate
-                                        ? 'bg-[#1a2324] text-primary border-primary/30'
-                                        : 'bg-[#1a2324] text-[#9eb6b7] border-transparent'
-                            }`}
-                        >
-                            <span className="text-xs font-medium uppercase">{format(d, 'EEE')}</span>
-                            <span className={`text-xl font-bold ${isSelected ? 'text-[#111717]' : 'text-white'}`}>{format(d, 'd')}</span>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Events List */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-                <div className="flex justify-between items-center mb-2">
-                    <h2 className="text-white font-bold">Schedule</h2>
-                    <button onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })} className="w-8 h-8 rounded-full bg-[#1a2324] flex items-center justify-center text-primary">
-                        <span className="material-symbols-outlined text-lg">add</span>
-                    </button>
-                </div>
-
-                {mobileEvents.length > 0 ? (
-                    mobileEvents.map(event => (
-                        <div 
-                            key={event.id} 
-                            onClick={() => handleEventClick(event)}
-                            className="bg-[#1a2324] border border-[#293738] p-4 rounded-xl flex gap-4 relative overflow-hidden"
-                        >
-                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${
-                                event.type === 'high' ? 'bg-red-500' : 
-                                event.type === 'medium' ? 'bg-amber-500' : 'bg-primary'
-                            }`} />
-                            <div className="flex-1">
-                                <h3 className="text-white font-bold mb-1">{event.title}</h3>
-                                <div className="flex items-center gap-2 text-xs text-[#9eb6b7]">
-                                    <span className="material-symbols-outlined text-sm">schedule</span>
-                                    {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
-                                </div>
-                            </div>
-                            {event.category && (
-                                <span className="text-[10px] uppercase font-bold tracking-wider bg-black/30 text-[#9eb6b7] px-2 py-1 rounded h-fit self-start">
-                                    {event.category}
-                                </span>
-                            )}
-                        </div>
-                    ))
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                        <div className="w-16 h-16 rounded-full bg-[#1a2324] flex items-center justify-center mb-4">
-                            <span className="material-symbols-outlined text-[#5f7475] text-2xl">event_busy</span>
-                        </div>
-                        <p className="text-[#9eb6b7]">No events for this day</p>
-                        <button onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })} className="mt-4 text-primary text-sm font-medium">
-                            + Add Event
+        <div className="md:hidden flex flex-col h-full bg-background-dark relative">
+            {/* Header Section */}
+            <header className="flex flex-col px-6 pt-6 pb-4 bg-background-dark z-10 sticky top-0">
+                {/* NLP Input */}
+                <div className="mb-6 relative z-40">
+                    <div className="bg-[#1A2627] border border-gray-700/50 shadow-lg rounded-2xl p-1.5 flex items-center gap-2 backdrop-blur-md">
+                        <button className="size-10 rounded-xl bg-[#293738] flex items-center justify-center text-primary shrink-0 hover:bg-gray-700 transition-colors">
+                            <span className="material-symbols-outlined">auto_awesome</span>
+                        </button>
+                        <input className="flex-1 bg-transparent border-none focus:ring-0 outline-none focus:outline-none text-white placeholder-[#9eb6b7] text-sm h-10 px-2" placeholder="Ask AI or Add Task..." type="text"/>
+                        <button className="size-10 rounded-xl bg-primary text-background-dark font-bold flex items-center justify-center shrink-0 hover:bg-primary/90 transition-colors">
+                            <span className="material-symbols-outlined">arrow_upward</span>
                         </button>
                     </div>
-                )}
-            </div>
+                </div>
+
+                {/* Month Selector */}
+                <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setMobileSelectedDate(subMonths(mobileSelectedDate, 1))} className="text-[#9eb6b7] hover:text-white p-1">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <h1 className="text-white text-2xl font-bold">{format(mobileSelectedDate, 'MMMM yyyy')}</h1>
+                        <button onClick={() => setMobileSelectedDate(addMonths(mobileSelectedDate, 1))} className="text-[#9eb6b7] hover:text-white p-1">
+                            <span className="material-symbols-outlined">arrow_forward</span>
+                        </button>
+                    </div>
+                    <div className="flex bg-[#293738] rounded-lg p-0.5">
+                        <button 
+                            onClick={() => setMobileSelectedDate(addDays(mobileSelectedDate, -1))}
+                            className="p-1.5 hover:bg-white/10 rounded-md text-white transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        </button>
+                        <button 
+                            onClick={() => setMobileSelectedDate(new Date())}
+                            className="px-3 py-1 text-xs font-medium text-white"
+                        >
+                            Today
+                        </button>
+                        <button 
+                            onClick={() => setMobileSelectedDate(addDays(mobileSelectedDate, 1))}
+                            className="p-1.5 hover:bg-white/10 rounded-md text-white transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Week Strip (Chips) */}
+                <div 
+                    ref={scrollRef}
+                    className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-6 px-6 snap-x"
+                >
+                    {mobileDates.map((d, i) => {
+                        const isSelected = isSameDay(d, mobileSelectedDate);
+                        return (
+                            <div 
+                                key={i}
+                                onClick={() => setMobileSelectedDate(d)}
+                                className={`flex flex-col min-w-[64px] h-[84px] shrink-0 items-center justify-center gap-1 rounded-2xl snap-start border transition-all cursor-pointer ${
+                                    isSelected 
+                                        ? 'bg-primary shadow-[0_0_20px_rgba(30,201,210,0.3)] border-transparent' 
+                                        : 'bg-[#293738] border-transparent'
+                                }`}
+                            >
+                                <p className={`text-xs font-medium ${isSelected ? 'text-background-dark' : 'text-[#9eb6b7]'}`}>{format(d, 'EEE')}</p>
+                                <p className={`text-lg font-black ${isSelected ? 'text-background-dark' : 'text-white'}`}>{format(d, 'd')}</p>
+                                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-background-dark mt-1"></div>}
+                            </div>
+                        );
+                    })}
+                </div>
+            </header>
+
+            {/* Main Timeline Content */}
+            <main className="flex-1 overflow-y-auto relative px-6 pb-40">
+                {/* Timeline Grid */}
+                <div className="grid grid-cols-[50px_1fr] gap-x-4">
+                    {Array.from({ length: 24 }, (_, i) => i).map(hour => {
+                        const hourEvents = mobileEvents.filter(event => event.start.getHours() === hour);
+                        const now = new Date();
+                        const isCurrentHour = isToday(mobileSelectedDate) && now.getHours() === hour;
+
+                        return (
+                            <React.Fragment key={hour}>
+                                <div className="pt-2 text-right">
+                                    <span className={`text-xs font-medium ${isCurrentHour ? 'text-primary font-bold' : 'text-[#9eb6b7]'}`}>
+                                        {format(new Date().setHours(hour, 0), 'HH:mm')}
+                                    </span>
+                                </div>
+                                <div 
+                                    className="min-h-[60px] border-b border-[#293738]/50 relative py-1"
+                                    onClick={() => handleSelectSlot({ 
+                                        start: new Date(new Date(mobileSelectedDate).setHours(hour, 0)), 
+                                        end: new Date(new Date(mobileSelectedDate).setHours(hour + 1, 0)) 
+                                    })}
+                                >
+                                    {isCurrentHour && (
+                                        <div 
+                                            className="absolute w-full h-[1px] bg-primary z-10 flex items-center"
+                                            style={{ top: `${(now.getMinutes() / 60) * 100}%` }}
+                                        >
+                                            <div className="size-2 bg-primary rounded-full -ml-1.5 shadow-[0_0_8px_rgba(30,201,210,0.8)]"></div>
+                                        </div>
+                                    )}
+                                    {hourEvents.map(event => (
+                                        <div 
+                                            key={event.id}
+                                            onClick={() => handleEventClick(event)}
+                                            className={`w-full transition-colors border-l-[3px] rounded-r-xl rounded-l-sm p-3 cursor-pointer group mb-2 relative z-20 ${
+                                                event.type === 'high' ? 'bg-red-900/20 hover:bg-red-900/30 border-red-500' :
+                                                event.type === 'medium' ? 'bg-amber-900/20 hover:bg-amber-900/30 border-amber-500' :
+                                                'bg-[#293738] hover:bg-[#293738]/80 border-primary'
+                                            }`}
+                                        >
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h3 className="text-white text-sm font-semibold">{event.title}</h3>
+                                                <span className="material-symbols-outlined text-[#9eb6b7] text-[16px] group-hover:text-primary">more_horiz</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[#9eb6b7] text-xs">
+                                                <span className="material-symbols-outlined text-[14px]">schedule</span>
+                                                {format(event.start, 'hh:mm')} - {format(event.end, 'hh:mm a')}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </React.Fragment>
+                        );
+                    })}
+                </div>
+            </main>
         </div>
 
         {/* Desktop View */}
@@ -377,29 +438,29 @@ const CalendarPage = () => {
           {/* Bottom Row: Calendar Controls */}
           <div className="flex flex-col sm:flex-row items-center justify-between pb-4 gap-4">
             <div className="flex items-center gap-4">
-              <h2 className="text-white text-2xl font-bold tracking-tight">
-                {format(date, 'MMMM yyyy')}
-              </h2>
-              <div className="flex items-center bg-surface-dark rounded-lg p-0.5 border border-[#293738]">
+              <div className="flex items-center gap-1">
                 <button 
                   onClick={() => handleNavigate('PREV')}
-                  className="p-1 hover:bg-[#293738] rounded-md text-[#9eb6b7] hover:text-white transition-colors"
+                  className="p-1 hover:bg-[#293738] rounded-full text-[#9eb6b7] hover:text-white transition-colors"
                 >
-                  <span className="material-symbols-outlined text-xl">chevron_left</span>
+                  <span className="material-symbols-outlined text-2xl">chevron_left</span>
                 </button>
-                <button 
-                  onClick={() => handleNavigate('TODAY')}
-                  className="px-3 py-1 text-sm font-medium text-white"
-                >
-                  {format(new Date(), 'd')}
-                </button>
+                <h2 className="text-white text-2xl font-bold tracking-tight px-2">
+                  {format(date, 'MMMM yyyy')}
+                </h2>
                 <button 
                   onClick={() => handleNavigate('NEXT')}
-                  className="p-1 hover:bg-[#293738] rounded-md text-[#9eb6b7] hover:text-white transition-colors"
+                  className="p-1 hover:bg-[#293738] rounded-full text-[#9eb6b7] hover:text-white transition-colors"
                 >
-                  <span className="material-symbols-outlined text-xl">chevron_right</span>
+                  <span className="material-symbols-outlined text-2xl">chevron_right</span>
                 </button>
               </div>
+              <button 
+                onClick={() => handleNavigate('TODAY')}
+                className="px-4 py-1.5 text-sm font-medium text-white bg-surface-dark border border-[#293738] rounded-md hover:bg-[#293738] transition-colors"
+              >
+                Today
+              </button>
             </div>
             <div className="flex bg-surface-dark p-1 rounded-lg border border-[#293738]">
               <button 
@@ -431,7 +492,7 @@ const CalendarPage = () => {
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: view === 'month' ? '85vh' : 2000 }}
+            style={{ height: '100%' }}
             view={view}
             onView={setView}
             date={date}

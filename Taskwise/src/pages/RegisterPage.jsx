@@ -3,20 +3,68 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MdPerson, MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { FaGoogle, FaGithub, FaSpinner } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signup, signInWithGoogle } = useAuth();
+  const { addNotification } = useNotifications();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    // const name = e.target.name.value; // We might want to store this in Firestore users collection later
+
+    try {
+      await signup(email, password);
+      addNotification({
+        title: 'Account Created',
+        message: 'Welcome to Taskwise!',
+        type: 'success'
+      });
       navigate('/onboarding/step1');
-    }, 2000);
+    } catch (error) {
+      console.error("Registration error:", error);
+      let errorMessage = 'Failed to create account.';
+      if (error.code === 'auth/email-already-in-use') errorMessage = 'Email is already in use.';
+      if (error.code === 'auth/weak-password') errorMessage = 'Password should be at least 6 characters.';
+      
+      addNotification({
+        title: 'Registration Failed',
+        message: errorMessage,
+        type: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleRegister = async () => {
+    try {
+      setIsLoading(true);
+      await signInWithGoogle();
+      addNotification({
+        title: 'Account Created',
+        message: 'Successfully signed up with Google!',
+        type: 'success'
+      });
+      navigate('/onboarding/step1');
+    } catch (error) {
+      console.error("Google registration error:", error);
+      addNotification({
+        title: 'Registration Failed',
+        message: 'Failed to sign up with Google.',
+        type: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -146,6 +194,7 @@ const RegisterPage = () => {
             </div>
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button 
+                onClick={handleGoogleRegister}
                 className="w-full inline-flex justify-center items-center py-2.5 px-4 border border-surface-border rounded-lg shadow-sm bg-background-dark text-sm font-medium text-gray-200 hover:bg-surface-border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-colors" 
                 type="button"
               >

@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUI } from '../../context/UIContext';
+import { aiService } from '../../services/aiService';
+import { useAuth } from '../../context/AuthContext';
 
 const AIAssistantSidebar = () => {
   const { isAIAssistantOpen, closeAIAssistant } = useUI();
+  const { currentUser } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [view, setView] = useState('chat'); // 'chat' or 'history'
+  const [isProcessing, setIsProcessing] = useState(false);
   const textareaRef = useRef(null);
 
   // Mock History Data
@@ -42,13 +46,38 @@ const AIAssistantSidebar = () => {
     setView('chat');
   };
 
+  const handleSend = async () => {
+    if (!inputValue.trim() || isProcessing) return;
+    
+    const userMsg = inputValue.trim();
+    setInputValue('');
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setIsProcessing(true);
+
+    try {
+      const response = await aiService.chat(userMsg, messages);
+      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error. Please try again." }]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   const getGreeting = () => {
     const date = new Date();
     const hour = date.getHours();
     const month = date.getMonth();
     const day = date.getDate();
     const dayOfWeek = date.getDay();
-    const name = "Alex";
+    const name = currentUser?.displayName?.split(' ')[0] || "User";
 
     // Fixed Date Holidays
     if (month === 0 && day === 1) return `Happy New Year, ${name}!`;
@@ -213,6 +242,7 @@ const AIAssistantSidebar = () => {
                   ref={textareaRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="w-full bg-transparent border-0 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-0 outline-none text-sm py-2 px-2 max-h-32 resize-none leading-relaxed no-scrollbar" 
                   placeholder="Ask anything..." 
                   rows={1}
@@ -227,12 +257,13 @@ const AIAssistantSidebar = () => {
                   </button>
                   {/* Send Button */}
                   <button 
+                    onClick={handleSend}
                     className={`p-2 rounded-xl transition-all duration-200 ${
-                      inputValue.trim() 
+                      inputValue.trim() && !isProcessing
                         ? 'bg-primary text-background-dark shadow-md shadow-primary/20 hover:bg-primary/90' 
                         : 'bg-gray-100 dark:bg-white/5 text-gray-400 cursor-not-allowed'
                     }`}
-                    disabled={!inputValue.trim()}
+                    disabled={!inputValue.trim() || isProcessing}
                   >
                     <span className="material-symbols-outlined text-[20px] flex">arrow_upward</span>
                   </button>

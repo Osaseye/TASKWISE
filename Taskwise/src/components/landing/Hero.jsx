@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { MdInstallMobile, MdAccountCircle, MdCheck, MdAutoAwesome, MdAdd } from 'react-icons/md';
 
 const Hero = () => {
@@ -21,10 +22,13 @@ const Hero = () => {
       await new Promise(r => setTimeout(r, 1500));
       
       // 4. Add a new task
-      setTasks(prev => [
-        ...prev, 
-        { id: 3, title: "Client Call", time: "3:00 PM • Google Meet", completed: false }
-      ]);
+      setTasks(prev => {
+        if (prev.some(t => t.id === 3)) return prev;
+        return [
+          ...prev, 
+          { id: 3, title: "Client Call", time: "3:00 PM • Google Meet", completed: false }
+        ];
+      });
       
       // 5. Wait
       await new Promise(r => setTimeout(r, 1500));
@@ -53,13 +57,13 @@ const Hero = () => {
               Meet TASKWISE. The AI planner that turns your messy, unstructured thoughts into actionable, organized plans instantly. No more manual entry.
             </p>
             <div className="animate-fade-in-up delay-300 flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
-              <button className="h-12 px-8 rounded-lg bg-primary text-background-dark font-bold text-base hover:bg-primary-dark transition-all shadow-[0_0_20px_-5px_rgba(30,201,210,0.3)]">
+              <Link to="/register" className="h-12 px-8 rounded-lg bg-primary text-background-dark font-bold text-base hover:bg-primary-dark transition-all shadow-[0_0_20px_-5px_rgba(30,201,210,0.3)] flex items-center justify-center">
                 Try for Free
-              </button>
-              <button className="h-12 px-8 rounded-lg bg-surface-dark border border-surface-border text-white font-bold text-base hover:bg-surface-border transition-all flex items-center gap-2">
+              </Link>
+              <Link to="/login" className="h-12 px-8 rounded-lg bg-surface-dark border border-surface-border text-white font-bold text-base hover:bg-surface-border transition-all flex items-center gap-2">
                 <MdInstallMobile className="text-[20px]" />
                 Open Web App
-              </button>
+              </Link>
             </div>
             <div className="animate-fade-in-up delay-300 pt-6 hidden lg:flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-500">
               <div className="flex -space-x-2">

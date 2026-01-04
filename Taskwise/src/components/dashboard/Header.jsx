@@ -1,10 +1,16 @@
+import { useTasks } from '../../context/TaskContext.jsx';
 import React, { useState, useEffect } from 'react';
-import { useTasks } from '../../context/TaskContext';
+import { useNotifications } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
+import { useUser } from '../../context/UserContext';
 import TaskConfirmationModal from './TaskConfirmationModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Header = () => {
   const { addTask, tasks } = useTasks();
+  const { notifications, markAllAsRead, markAsRead } = useNotifications();
+  const { currentUser } = useAuth();
+  const { userProfile } = useUser();
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -13,6 +19,10 @@ const Header = () => {
   const [loadingText, setLoadingText] = useState('Processing...');
 
   const pendingTasksCount = tasks.filter(t => !t.completed).length;
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+  
+  const displayName = userProfile?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
+  const greetingName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
 
   useEffect(() => {
     let interval;
@@ -74,7 +84,7 @@ const Header = () => {
     <header className="pt-6 px-6 pb-4 md:px-8 flex flex-col gap-4 shrink-0 z-10 relative">
       <div className="flex justify-between items-start">
         <div>
-          <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Good Morning, Alex</h2>
+          <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Good Morning, {greetingName}</h2>
           <p className="text-text-secondary text-sm">You have {pendingTasksCount} tasks pending today. Stay focused.</p>
         </div>
         <div className="relative">
@@ -83,7 +93,9 @@ const Header = () => {
             className="w-9 h-9 rounded-full bg-[#293738] hover:bg-[#3d5152] flex items-center justify-center text-white transition-colors relative"
           >
             <span className="material-symbols-outlined text-[20px]">notifications</span>
-            <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-primary border border-[#293738]"></span>
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-primary border border-[#293738]"></span>
+            )}
           </button>
 
           {/* Notification Dropdown */}
@@ -97,27 +109,36 @@ const Header = () => {
               >
                 <div className="p-3 border-b border-[#293738] flex justify-between items-center">
                   <h4 className="text-sm font-bold text-white">Notifications</h4>
-                  <button className="text-[10px] text-primary hover:underline">Mark all read</button>
+                  {unreadNotificationsCount > 0 && (
+                    <button onClick={markAllAsRead} className="text-[10px] text-primary hover:underline">Mark all read</button>
+                  )}
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  <div className="p-3 hover:bg-[#293738]/50 transition-colors cursor-pointer border-b border-[#293738]/50">
-                    <div className="flex gap-3">
-                      <div className="w-2 h-2 mt-1.5 rounded-full bg-primary shrink-0"></div>
-                      <div>
-                        <p className="text-xs text-white font-medium">Meeting in 15 mins</p>
-                        <p className="text-[10px] text-text-secondary mt-0.5">Team Sync • 4:30 PM</p>
+                  {notifications.length > 0 ? (
+                    notifications.map(notification => (
+                      <div 
+                        key={notification.id}
+                        onClick={() => markAsRead(notification.id)}
+                        className={`p-3 hover:bg-[#293738]/50 transition-colors cursor-pointer border-b border-[#293738]/50 ${!notification.read ? 'bg-[#293738]/20' : ''}`}
+                      >
+                        <div className="flex gap-3">
+                          <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${
+                            notification.type === 'success' ? 'bg-primary' :
+                            notification.type === 'error' ? 'bg-red-500' :
+                            'bg-blue-500'
+                          }`}></div>
+                          <div>
+                            <p className={`text-xs font-medium ${!notification.read ? 'text-white' : 'text-[#9eb6b7]'}`}>{notification.title}</p>
+                            <p className="text-[10px] text-text-secondary mt-0.5">{notification.message} • {notification.time}</p>
+                          </div>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center">
+                      <p className="text-xs text-[#5f7475]">No notifications</p>
                     </div>
-                  </div>
-                  <div className="p-3 hover:bg-[#293738]/50 transition-colors cursor-pointer">
-                    <div className="flex gap-3">
-                      <div className="w-2 h-2 mt-1.5 rounded-full bg-accent-blue shrink-0"></div>
-                      <div>
-                        <p className="text-xs text-white font-medium">New feature available</p>
-                        <p className="text-[10px] text-text-secondary mt-0.5">Try the new AI insights dashboard</p>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </motion.div>
             )}

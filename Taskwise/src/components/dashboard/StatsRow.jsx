@@ -45,7 +45,6 @@ const StatsRow = ({ loading }) => {
           <div className="p-1.5 rounded-lg bg-[#293738] text-white group-hover:bg-primary/20 group-hover:text-primary transition-colors">
             <span className="material-symbols-outlined text-[20px]">check_circle</span>
           </div>
-          <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">+12% vs yest</span>
         </div>
         <div>
           <p className="text-text-secondary text-xs font-medium mb-1">Daily Completion</p>
@@ -91,11 +90,11 @@ const StatsRow = ({ loading }) => {
           <div className="p-1.5 rounded-lg bg-[#293738] text-white group-hover:bg-orange-400/20 group-hover:text-orange-400 transition-colors">
             <span className="material-symbols-outlined text-[20px]">local_fire_department</span>
           </div>
-          <span className="text-[10px] font-medium text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded">Best: 12 days</span>
+          <span className="text-[10px] font-medium text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded">Best: {stats.bestStreak || 0} days</span>
         </div>
         <div>
           <p className="text-text-secondary text-xs font-medium mb-1">Current Streak</p>
-          <p className="text-2xl font-bold text-white">5 Days</p>
+          <p className="text-2xl font-bold text-white">{stats.currentStreak || 0} Days</p>
         </div>
       </motion.div>
     </section>

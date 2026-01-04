@@ -3,20 +3,68 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MdCheck, MdDeviceHub, MdCalendarMonth, MdSchedule, MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import { FaGoogle, FaGithub, FaSpinner } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, signInWithGoogle } = useAuth();
+  const { addNotification } = useNotifications();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    try {
+      await login(email, password);
+      addNotification({
+        title: 'Welcome back!',
+        message: 'Successfully logged in.',
+        type: 'success'
+      });
       navigate('/dashboard');
-    }, 2000);
+    } catch (error) {
+      console.error("Login error:", error);
+      let errorMessage = 'Failed to log in.';
+      if (error.code === 'auth/user-not-found') errorMessage = 'No account found with this email.';
+      if (error.code === 'auth/wrong-password') errorMessage = 'Incorrect password.';
+      if (error.code === 'auth/invalid-credential') errorMessage = 'Invalid email or password.';
+      
+      addNotification({
+        title: 'Login Failed',
+        message: errorMessage,
+        type: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      await signInWithGoogle();
+      addNotification({
+        title: 'Welcome back!',
+        message: 'Successfully logged in with Google.',
+        type: 'success'
+      });
+      navigate('/dashboard');
+    } catch (error) {
+      console.error("Google login error:", error);
+      addNotification({
+        title: 'Login Failed',
+        message: 'Failed to log in with Google.',
+        type: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 return (
@@ -114,7 +162,11 @@ return (
                         </div>
                     </div>
                     <div className="mt-6 grid grid-cols-2 gap-3">
-                        <button className="w-full inline-flex justify-center items-center py-2.5 px-4 border border-surface-border rounded-lg shadow-sm bg-background-dark text-sm font-medium text-gray-200 hover:bg-surface-border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-colors" type="button">
+                        <button 
+                            onClick={handleGoogleLogin}
+                            className="w-full inline-flex justify-center items-center py-2.5 px-4 border border-surface-border rounded-lg shadow-sm bg-background-dark text-sm font-medium text-gray-200 hover:bg-surface-border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-dark transition-colors" 
+                            type="button"
+                        >
                             <FaGoogle className="h-5 w-5" />
                             <span className="ml-2">Google</span>
                         </button>

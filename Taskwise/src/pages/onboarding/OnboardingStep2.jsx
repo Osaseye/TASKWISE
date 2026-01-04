@@ -13,13 +13,18 @@ const roles = [
 ];
 
 import { MdAutoAwesome } from 'react-icons/md';
+import { useUser } from '../../context/UserContext';
 
 const OnboardingStep2 = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const navigate = useNavigate();
+  const { updateOnboardingData } = useUser();
 
   const handleContinue = () => {
-    navigate('/onboarding/step3');
+    if (selectedRole) {
+      updateOnboardingData({ role: selectedRole });
+      navigate('/onboarding/step3');
+    }
   };
 
   const handleBack = () => {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const CTA = () => {
   return (
@@ -19,9 +20,9 @@ const CTA = () => {
           Ready to declutter your mind?
         </h2>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="w-full sm:w-auto h-14 px-10 rounded-xl bg-primary text-background-dark text-lg font-bold hover:bg-primary-dark transition-all shadow-[0_0_30px_-5px_rgba(30,201,210,0.4)] hover:scale-105">
+          <Link to="/register" className="w-full sm:w-auto h-14 px-10 rounded-xl bg-primary text-background-dark text-lg font-bold hover:bg-primary-dark transition-all shadow-[0_0_30px_-5px_rgba(30,201,210,0.4)] hover:scale-105 flex items-center justify-center">
             Get Started for Free
-          </button>
+          </Link>
         </div>
         <p className="mt-6 text-sm text-gray-400 font-medium">No credit card required. Free plan available forever.</p>
       </div>

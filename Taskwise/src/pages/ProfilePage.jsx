@@ -4,25 +4,34 @@ import AIAssistantButton from '../components/dashboard/AIAssistantButton';
 import MobileNavbar from '../components/dashboard/MobileNavbar';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { useUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
+import { useTasks } from '../context/TaskContext';
 
 const ProfilePage = () => {
+  const { userProfile, loading: userLoading } = useUser();
+  const { currentUser } = useAuth();
+  const { tasks } = useTasks();
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [user, setUser] = useState({
-    name: 'Alex Morgan',
-    email: 'alex.morgan@example.com',
-    role: 'Developer',
-    workStyle: 'Deep Work',
-    goals: ['Increase Productivity', 'Better Work-Life Balance'],
-    timezone: 'GMT-5 (EST)'
-  });
+  
+  // Use profile data or fallbacks
+  const user = {
+    name: userProfile?.name || currentUser?.displayName || 'User',
+    email: userProfile?.email || currentUser?.email || '',
+    role: userProfile?.role || 'Not set',
+    workStyle: userProfile?.workStyle || 'Not set',
+    goals: userProfile?.goals || [],
+    timezone: userProfile?.timezone || 'Not set'
+  };
+
+  const completedTasksCount = tasks.filter(t => t.completed).length;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (!userLoading) {
       setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  }, [userLoading]);
 
   return (
     <SkeletonTheme baseColor="#1e293b" highlightColor="#293738">
@@ -104,11 +113,10 @@ const ProfilePage = () => {
                       </div>
                       <span className="text-green-400 text-xs font-bold bg-green-400/10 px-2 py-1 rounded">+12%</span>
                     </div>
-                    <div>
+                      <p className="text-white text-2xl font-bold">{completedTasksCount}</p>
                       <p className="text-text-subtle text-sm font-medium">Tasks Completed</p>
                       <p className="text-white text-3xl font-bold mt-1">124</p>
                     </div>
-                  </div>
                   
                   {/* Stat 2: Role (Identity) */}
                   <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex flex-col gap-4 hover:border-primary/30 transition-colors group">
