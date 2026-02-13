@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import TaskDetailsModal from './TaskDetailsModal';
 import Skeleton from 'react-loading-skeleton';
 import { useTasks } from '../../context/TaskContext';
-import { format, isAfter, isToday, parseISO, startOfDay, isTomorrow } from 'date-fns';
+import { format, isAfter, isToday, parseISO, startOfDay, addHours, isBefore, isTomorrow } from 'date-fns';
 
 const UpcomingTasks = ({ loading }) => {
   const [selectedTask, setSelectedTask] = useState(null);
@@ -12,23 +12,60 @@ const UpcomingTasks = ({ loading }) => {
   const upcomingTasks = useMemo(() => {
     if (!tasks) return [];
     
-    const today = startOfDay(new Date());
+    const now = new Date();
+    const threeHoursFromNow = addHours(now, 3);
     
     return tasks
       .filter(task => {
-        if (!task.date) return false;
-        const taskDate = parseISO(task.date);
-        // Show tasks strictly after today (tomorrow onwards)
-        return isAfter(taskDate, today) && !isToday(taskDate);
+        const dateStr = task.dueDate || task.date;
+        if (!dateStr) return false;
+        
+        // Parse date
+        let taskDate = typeof dateStr === 'string' ? parseISO(dateStr) : 
+                       dateStr.toDate ? dateStr.toDate() : new Date(dateStr);
+
+        // If task has specific time, adjust the date object
+        if (task.startTime || task.time) {
+             const timeStr = task.startTime || task.time;
+             if (timeStr.includes(':')) {
+                 const [h, m] = timeStr.split(':');
+                 taskDate = new Date(taskDate);
+                 taskDate.setHours(parseInt(h), parseInt(m), 0, 0);
+             }
+        } else {
+             return false;
+        }
+        
+        return isAfter(taskDate, now) && isBefore(taskDate, threeHoursFromNow);
       })
-      .sort((a, b) => parseISO(a.date) - parseISO(b.date));
+      .sort((a, b) => {
+         const dateA = a.dueDate || a.date;
+         const dateB = b.dueDate || b.date;
+         return new Date(dateA) - new Date(dateB);
+      });
   }, [tasks]);
 
   // Group tasks by date
   const groupedTasks = useMemo(() => {
     const groups = {};
     upcomingTasks.forEach(task => {
-      const dateKey = task.date;
+      // Robust date extraction for grouping key
+      let dateKey = task.dueDate || task.date;
+      
+      // Ensure we have a string YYYY-MM-DD for grouping
+      try {
+        if (dateKey && typeof dateKey !== 'string') {
+             const d = dateKey.toDate ? dateKey.toDate() : new Date(dateKey);
+             dateKey = d.toISOString().split('T')[0];
+        } else if (dateKey && typeof dateKey === 'string' && dateKey.includes('T')) {
+             dateKey = dateKey.split('T')[0];
+        }
+      } catch (e) {
+          dateKey = 'Unknown';
+      }
+
+      if (!dateKey) dateKey = 'Unknown';
+
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }

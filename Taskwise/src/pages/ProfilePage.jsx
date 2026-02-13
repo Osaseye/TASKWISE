@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import AIAssistantButton from '../components/dashboard/AIAssistantButton';
 import MobileNavbar from '../components/dashboard/MobileNavbar';
@@ -13,7 +14,6 @@ const ProfilePage = () => {
   const { currentUser } = useAuth();
   const { tasks } = useTasks();
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   // Use profile data or fallbacks
   const user = {
@@ -22,7 +22,8 @@ const ProfilePage = () => {
     role: userProfile?.role || 'Not set',
     workStyle: userProfile?.workStyle || 'Not set',
     goals: userProfile?.goals || [],
-    timezone: userProfile?.timezone || 'Not set'
+    timezone: userProfile?.timezone || 'Not set',
+    photoURL: userProfile?.photoURL || currentUser?.photoURL
   };
 
   const completedTasksCount = tasks.filter(t => t.completed).length;
@@ -67,9 +68,11 @@ const ProfilePage = () => {
                 <>
                   <div className="relative group">
                     <div 
-                      className="bg-center bg-no-repeat bg-cover rounded-full h-32 w-32 border-4 border-[#112021] shadow-xl" 
-                      style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBJ4VvtzkXUGSATUWvb6IbxM2ATQPCHNlGbBrqkt3rxR_ZsW7hF1WL4N7qte1QuESMWPNdn4dXP7hEolmV023LMYdortAntpmYSa0NJ8lHp0i_JfrLZLWvCV2RbBlEvzPgfLmi_Mcsz4XvqE1kp5L_RAyoNfGqH41YkLtrEHF4RXzHTXn9u0WhC6EjEcTTn32Tub4Hg7onsx0DubcPK5EkIHnwc5bXzs5GjYOsJR71GAlAM_pp2EgYuPo1zsPo60059STlAEXy6IQ_n")' }}
-                    ></div>
+                      className="bg-center bg-no-repeat bg-cover rounded-full h-32 w-32 border-4 border-[#112021] shadow-xl flex items-center justify-center bg-[#1c2a2b] text-4xl font-bold text-text-subtle" 
+                      style={user.photoURL ? { backgroundImage: `url("${user.photoURL}")` } : {}}
+                    >
+                        {!user.photoURL && user.name.charAt(0)}
+                    </div>
                     <div className="absolute bottom-2 right-2 bg-green-500 w-5 h-5 rounded-full border-4 border-[#112021]" title="Online"></div>
                   </div>
                   
@@ -78,13 +81,13 @@ const ProfilePage = () => {
                     <p className="text-text-subtle text-lg">{user.email}</p>
                   </div>
                   
-                  <button 
-                    onClick={() => setIsEditModalOpen(true)}
+                  <Link 
+                    to="/profile/edit"
                     className="z-10 flex items-center gap-2 bg-[#1ec9d2] hover:bg-[#1bbdc5] text-[#112021] px-6 py-3 rounded-lg font-bold transition-colors shadow-lg shadow-[#1ec9d2]/10"
                   >
                     <span className="material-symbols-outlined text-[20px]">edit</span>
                     <span>Edit Profile</span>
-                  </button>
+                  </Link>
                 </>
               )}
             </div>
@@ -111,11 +114,10 @@ const ProfilePage = () => {
                       <div className="bg-[#293738] p-2 rounded-lg text-white group-hover:text-[#1ec9d2] transition-colors">
                         <span className="material-symbols-outlined">check_circle</span>
                       </div>
-                      <span className="text-green-400 text-xs font-bold bg-green-400/10 px-2 py-1 rounded">+12%</span>
+                      <span className="text-green-400 text-xs font-bold bg-green-400/10 px-2 py-1 rounded">All Time</span>
                     </div>
-                      <p className="text-white text-2xl font-bold">{completedTasksCount}</p>
                       <p className="text-text-subtle text-sm font-medium">Tasks Completed</p>
-                      <p className="text-white text-3xl font-bold mt-1">124</p>
+                      <p className="text-white text-3xl font-bold mt-1">{completedTasksCount}</p>
                     </div>
                   
                   {/* Stat 2: Role (Identity) */}
@@ -230,80 +232,6 @@ const ProfilePage = () => {
 
         <MobileNavbar />
         <AIAssistantButton />
-
-        {/* Edit Profile Modal */}
-        {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#1e293b] border border-[#293738] rounded-xl w-full max-w-md p-6 shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-white">Edit Profile</h3>
-                <button 
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="text-text-subtle hover:text-white transition-colors"
-                >
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-              
-              <div className="flex flex-col gap-4">
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-text-subtle">Full Name</span>
-                  <input 
-                    type="text" 
-                    value={user.name}
-                    onChange={(e) => setUser({...user, name: e.target.value})}
-                    className="bg-[#111717] border border-[#293738] rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
-                  />
-                </label>
-                
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-text-subtle">Role</span>
-                  <select 
-                    value={user.role}
-                    onChange={(e) => setUser({...user, role: e.target.value})}
-                    className="bg-[#111717] border border-[#293738] rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
-                  >
-                    <option>Student</option>
-                    <option>Developer</option>
-                    <option>Designer</option>
-                    <option>Manager</option>
-                    <option>Freelancer</option>
-                    <option>Other</option>
-                  </select>
-                </label>
-
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-text-subtle">Work Style</span>
-                  <select 
-                    value={user.workStyle}
-                    onChange={(e) => setUser({...user, workStyle: e.target.value})}
-                    className="bg-[#111717] border border-[#293738] rounded-lg px-4 py-2 text-white focus:border-primary focus:outline-none"
-                  >
-                    <option>Deep Work</option>
-                    <option>Pomodoro</option>
-                    <option>Collaborative</option>
-                    <option>Flexible</option>
-                  </select>
-                </label>
-              </div>
-              
-              <div className="flex justify-end gap-3 mt-8">
-                <button 
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-text-subtle hover:text-white hover:bg-[#293738] transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-primary text-[#112021] font-bold hover:bg-[#1bbdc5] transition-colors"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </SkeletonTheme>
   );

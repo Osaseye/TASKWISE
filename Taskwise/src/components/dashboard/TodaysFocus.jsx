@@ -107,22 +107,16 @@ const TodaysFocus = ({ loading }) => {
   const getProcessedTasks = () => {
     let processed = [...tasks];
 
-    // Filter by Date (Today or Overdue)
+    // Filter by Date (Today)
     processed = processed.filter(t => {
-        if (!t.dueDate) return false; // Skip tasks with no due date
+        // Handle both dueDate (new) and date (legacy) fields
+        const dateStr = t.dueDate || t.date;
+        if (!dateStr) return false; 
         
-        const date = typeof t.dueDate === 'string' ? parseISO(t.dueDate) : 
-                     t.dueDate.toDate ? t.dueDate.toDate() : new Date(t.dueDate);
+        const date = typeof dateStr === 'string' ? parseISO(dateStr) : 
+                     dateStr.toDate ? dateStr.toDate() : new Date(dateStr);
         
-        // Show if today
-        if (isToday(date)) return true;
-        
-        // Optional: Show overdue tasks if not completed?
-        // For "Today's Focus", usually we want to see what we need to do today.
-        // If it's overdue and not completed, it should probably be here too.
-        if (isPast(date) && !isSameDay(date, new Date()) && !t.completed) return true;
-
-        return false;
+        return isToday(date);
     });
 
     // Filter

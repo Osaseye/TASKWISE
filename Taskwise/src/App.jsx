@@ -18,6 +18,11 @@ import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import ChangePasswordPage from './pages/settings/ChangePasswordPage';
+import ActiveSessionsPage from './pages/settings/ActiveSessionsPage';
+import ContactSupportPage from './pages/settings/ContactSupportPage';
+import FAQPage from './pages/settings/FAQPage';
+import EditProfilePage from './pages/settings/EditProfilePage';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -40,7 +45,12 @@ const AnimatedRoutes = () => {
         <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
         <Route path="/tasks" element={<ProtectedRoute><MyTasksPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
+        <Route path="/settings/sessions" element={<ProtectedRoute><ActiveSessionsPage /></ProtectedRoute>} />
+        <Route path="/settings/support" element={<ProtectedRoute><ContactSupportPage /></ProtectedRoute>} />
+        <Route path="/settings/faq" element={<ProtectedRoute><FAQPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/profile/edit" element={<ProtectedRoute><EditProfilePage /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
       </Routes>

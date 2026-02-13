@@ -9,20 +9,16 @@ import { useAuth } from '../context/AuthContext';
 import { useUser } from '../context/UserContext';
 
 const SettingsPage = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, deleteAccount } = useAuth();
   const { userProfile, updateUserProfile, loading: userLoading } = useUser();
   const navigate = useNavigate();
+
 
   const [isLoading, setIsLoading] = useState(true);
   
   // Settings State
-  const [timezone, setTimezone] = useState('utc-8');
+  const [timezone, setTimezone] = useState('Africa/Lagos');
   const [language, setLanguage] = useState('en');
-  const [darkMode, setDarkMode] = useState(true);
-  const [compactMode, setCompactMode] = useState(false);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(false);
-  const [marketingEmails, setMarketingEmails] = useState(false);
   const [twoFactor, setTwoFactor] = useState(false);
 
   useEffect(() => {
@@ -30,13 +26,8 @@ const SettingsPage = () => {
       setIsLoading(false);
       // Load settings from profile if they exist
       if (userProfile.settings) {
-        setTimezone(userProfile.settings.timezone || 'utc-8');
+        setTimezone(userProfile.settings.timezone || 'Africa/Lagos');
         setLanguage(userProfile.settings.language || 'en');
-        setDarkMode(userProfile.settings.darkMode ?? true);
-        setCompactMode(userProfile.settings.compactMode ?? false);
-        setEmailNotifications(userProfile.settings.emailNotifications ?? true);
-        setPushNotifications(userProfile.settings.pushNotifications ?? false);
-        setMarketingEmails(userProfile.settings.marketingEmails ?? false);
         setTwoFactor(userProfile.settings.twoFactor ?? false);
       }
     } else if (!userLoading && !userProfile) {
@@ -49,11 +40,6 @@ const SettingsPage = () => {
     switch(key) {
       case 'timezone': setTimezone(value); break;
       case 'language': setLanguage(value); break;
-      case 'darkMode': setDarkMode(value); break;
-      case 'compactMode': setCompactMode(value); break;
-      case 'emailNotifications': setEmailNotifications(value); break;
-      case 'pushNotifications': setPushNotifications(value); break;
-      case 'marketingEmails': setMarketingEmails(value); break;
       case 'twoFactor': setTwoFactor(value); break;
     }
 
@@ -73,6 +59,18 @@ const SettingsPage = () => {
       navigate('/login');
     } catch (error) {
       console.error("Failed to log out", error);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      try {
+        await deleteAccount();
+        navigate('/login');
+      } catch (error) {
+        console.error("Failed to delete account", error);
+        alert("Failed to delete account. You may need to re-login first.");
+      }
     }
   };
 
@@ -160,6 +158,7 @@ const SettingsPage = () => {
                             onChange={(e) => handleSettingChange('timezone', e.target.value)}
                             className="w-full appearance-none rounded-lg bg-[#111717] border border-border-dark focus:border-primary focus:ring-1 focus:ring-primary text-white h-11 px-4 pr-10 transition-all cursor-pointer text-sm"
                           >
+                            <option value="Africa/Lagos">West Africa Time (PHT/Lagos)</option>
                             <option value="utc-8">Pacific Time (US & Canada)</option>
                             <option value="utc-5">Eastern Time (US & Canada)</option>
                             <option value="utc+0">London (GMT+00:00)</option>
@@ -188,47 +187,6 @@ const SettingsPage = () => {
                     </div>
                   </div>
 
-                  {/* Appearance */}
-                  <div className="flex flex-col gap-4">
-                    <h2 className="text-white text-lg font-bold px-1 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-primary">palette</span>
-                      Appearance
-                    </h2>
-                    <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex flex-col gap-6 h-full">
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-white text-sm font-medium">Dark Mode</span>
-                          <span className="text-xs text-text-subtle">Easier on the eyes in low light.</span>
-                        </div>
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer"
-                            checked={darkMode}
-                            onChange={(e) => handleSettingChange('darkMode', e.target.checked)}
-                          />
-                          <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t border-[#293738]">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-white text-sm font-medium">Compact Mode</span>
-                          <span className="text-xs text-text-subtle">Show more content on screen.</span>
-                        </div>
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer"
-                            checked={compactMode}
-                            onChange={(e) => handleSettingChange('compactMode', e.target.checked)}
-                          />
-                          <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Notifications */}
                   <div className="flex flex-col gap-4">
                     <h2 className="text-white text-lg font-bold px-1 flex items-center gap-2">
@@ -237,39 +195,13 @@ const SettingsPage = () => {
                     </h2>
                     <div className="bg-surface-dark border border-border-dark rounded-xl p-6 flex flex-col gap-5 h-full">
                       <div className="flex items-center justify-between">
-                        <span className="text-white text-sm font-medium">Email Alerts</span>
-                        <label className="inline-flex items-center cursor-pointer">
+                        <span className="text-white text-sm font-medium">Pop-up Notifications</span>
+                        <label className="inline-flex items-center cursor-not-allowed opacity-80">
                           <input 
                             type="checkbox" 
                             className="sr-only peer"
-                            checked={emailNotifications}
-                            onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
-                          />
-                          <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-white text-sm font-medium">Push Notifications</span>
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer"
-                            checked={pushNotifications}
-                            onChange={(e) => handleSettingChange('pushNotifications', e.target.checked)}
-                          />
-                          <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-white text-sm font-medium">Marketing Emails</span>
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer"
-                            checked={marketingEmails}
-                            onChange={(e) => handleSettingChange('marketingEmails', e.target.checked)}
+                            checked={true}
+                            readOnly
                           />
                           <div className="relative w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                         </label>
@@ -300,15 +232,15 @@ const SettingsPage = () => {
                         </label>
                       </div>
                       
-                      <button className="w-full flex items-center justify-between p-3 rounded-lg bg-[#111717] border border-border-dark hover:border-primary/50 transition-colors group text-sm">
+                      <Link to="/settings/password" className="w-full flex items-center justify-between p-3 rounded-lg bg-[#111717] border border-border-dark hover:border-primary/50 transition-colors group text-sm">
                         <span className="text-white font-medium">Change Password</span>
                         <span className="material-symbols-outlined text-text-subtle text-base group-hover:text-primary">arrow_forward</span>
-                      </button>
+                      </Link>
 
-                      <button className="w-full flex items-center justify-between p-3 rounded-lg bg-[#111717] border border-border-dark hover:border-primary/50 transition-colors group text-sm">
+                      <Link to="/settings/sessions" className="w-full flex items-center justify-between p-3 rounded-lg bg-[#111717] border border-border-dark hover:border-primary/50 transition-colors group text-sm">
                         <span className="text-white font-medium">Active Sessions</span>
                         <span className="material-symbols-outlined text-text-subtle text-base group-hover:text-primary">devices</span>
-                      </button>
+                      </Link>
                     </div>
                   </div>
 
@@ -323,14 +255,14 @@ const SettingsPage = () => {
                         <span className="material-symbols-outlined text-text-subtle">download</span>
                         <span className="text-white text-sm font-medium">Export My Data</span>
                       </button>
-                      <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#111717] transition-colors text-left">
+                      <Link to="/settings/faq" className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#111717] transition-colors text-left">
                         <span className="material-symbols-outlined text-text-subtle">help</span>
                         <span className="text-white text-sm font-medium">Help Center</span>
-                      </button>
-                      <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#111717] transition-colors text-left">
+                      </Link>
+                      <Link to="/settings/support" className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[#111717] transition-colors text-left">
                         <span className="material-symbols-outlined text-text-subtle">bug_report</span>
                         <span className="text-white text-sm font-medium">Report a Bug</span>
-                      </button>
+                      </Link>
                     </div>
                   </div>
 
@@ -349,7 +281,10 @@ const SettingsPage = () => {
                         Log Out
                       </button>
                       
-                      <button className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors text-sm font-medium text-red-400">
+                      <button 
+                        onClick={handleDeleteAccount}
+                        className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors text-sm font-medium text-red-400"
+                      >
                         <span className="material-symbols-outlined text-base">delete</span>
                         Delete Account
                       </button>

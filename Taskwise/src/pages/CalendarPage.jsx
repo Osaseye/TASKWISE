@@ -13,6 +13,10 @@ import enUS from 'date-fns/locale/en-US';
 import { addDays, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useTasks } from '../context/TaskContext';
+import { aiService } from '../services/aiService';
+import RecurringTaskModal from '../components/dashboard/RecurringTaskModal';
+import RegularTaskModal from '../components/dashboard/RegularTaskModal';
+import TaskDetailsModal from '../components/dashboard/TaskDetailsModal';
 
 const locales = {
   'en-US': enUS,
@@ -27,7 +31,7 @@ const localizer = dateFnsLocalizer({
 });
 
 const CalendarPage = () => {
-  const { tasks } = useTasks();
+  const { tasks, addTask } = useTasks();
   const [events, setEvents] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -35,6 +39,115 @@ const CalendarPage = () => {
   const [newEventData, setNewEventData] = useState({ title: '', type: 'medium', category: 'Work' });
   const [date, setDate] = useState(new Date()); // Start on Today
   const [view, setView] = useState('week');
+
+  // AI Input State
+  const [inputValue, setInputValue] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [showRegularModal, setShowRegularModal] = useState(false);
+  const [parsedData, setParsedData] = useState(null);
+  const [loadingText, setLoadingText] = useState('Processing...');
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    let interval;
+    if (isProcessing) {
+      const texts = ['Analyzing request...', 'Extracting details...', 'Scheduling task...'];
+      let i = 0;
+      setLoadingText(texts[0]);
+      interval = setInterval(() => {
+        i = (i + 1) % texts.length;
+        setLoadingText(texts[i]);
+      }, 500);
+    }
+    return () => clearInterval(interval);
+  }, [isProcessing]);
+
+  // Handle Speech to Text
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Speech recognition is not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue((prev) => prev + (prev ? ' ' : '') + transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
+  const handleNLP = async () => {
+    if (!inputValue.trim()) return;
+
+    setIsProcessing(true);
+    
+    try {
+      const parsed = await aiService.parseTaskCommand(inputValue);
+      
+      if (parsed) {
+        setParsedData(parsed);
+        setIsProcessing(false);
+        
+        if (parsed.recurrence && parsed.recurrence.type && parsed.recurrence.type !== 'none') {
+          setShowRecurringModal(true);
+        } else {
+          setShowRegularModal(true);
+        }
+      } else {
+        throw new Error("Failed to parse");
+      }
+    } catch (error) {
+      console.error("NLP Error:", error);
+      setParsedData({
+        title: inputValue,
+        priority: 'Medium',
+        category: 'General',
+        startDate: new Date().toISOString().split('T')[0],
+        startTime: ''
+      });
+      setIsProcessing(false);
+      setShowRegularModal(true);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !isProcessing) {
+      handleNLP();
+    }
+  };
+
+  const handleConfirm = (data) => {
+    addTask(data);
+    setShowRecurringModal(false);
+    setShowRegularModal(false);
+    setInputValue('');
+    setParsedData(null);
+  };
 
   // Map tasks to calendar events
   useEffect(() => {
@@ -65,6 +178,7 @@ const CalendarPage = () => {
       }
 
       return {
+        ...task,
         id: task.id,
         title: task.title,
         start: startDate,
@@ -99,8 +213,7 @@ const CalendarPage = () => {
   const mobileEvents = events.filter(event => isSameDay(event.start, mobileSelectedDate));
 
   const handleEventClick = (event) => {
-    const timeString = `${format(event.start, 'h:mm')} - ${format(event.end, 'h:mm a')}`;
-    setSelectedEvent({ ...event, time: timeString });
+    setSelectedEvent(event);
     setIsModalOpen(true);
   };
 
@@ -439,14 +552,25 @@ const CalendarPage = () => {
               {/* NLP Input */}
               <div className="flex w-full items-stretch rounded-full h-12 bg-surface-dark border border-[#293738] focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all shadow-md">
                 <div className="text-primary flex items-center justify-center pl-4 pr-2">
-                  <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+                  <span className={`material-symbols-outlined text-[20px] transition-colors ${isProcessing ? 'animate-pulse' : ''}`}>
+                    {isProcessing ? 'hourglass_top' : 'auto_awesome'}
+                  </span>
                 </div>
                 <input 
                   className="w-full bg-transparent border-none text-white placeholder-[#5f7475] focus:ring-0 text-sm h-full outline-none" 
-                  placeholder="Ask AI to 'Schedule a design review for next Tuesday at 2pm'..."
+                  placeholder={isProcessing ? loadingText : "Ask AI to 'Schedule a design review for next Tuesday at 2pm'..."}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isProcessing}
                 />
-                <button className="text-[#9eb6b7] hover:text-white flex items-center justify-center pr-4 transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">mic</span>
+                <button 
+                  onClick={handleVoiceInput}
+                  className={`flex items-center justify-center pr-4 transition-colors ${
+                    isListening ? 'text-red-500 animate-pulse' : 'text-[#9eb6b7] hover:text-white'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">{isListening ? 'mic' : 'mic_none'}</span>
                 </button>
               </div>
             </div>
@@ -532,116 +656,28 @@ const CalendarPage = () => {
         <MobileNavbar />
 
         {/* Task Details Modal */}
-        <AnimatePresence>
-          {isModalOpen && selectedEvent && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-surface-dark border border-[#293738] rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col w-full max-w-md"
-              >
-                {/* Modal Header */}
-                <div className="p-6 pb-0 flex justify-between items-start">
-                  <div className="flex gap-4">
-                    <div className={`p-3 rounded-xl h-fit ${
-                      selectedEvent.type === 'high' ? 'bg-[#ef4444]/20 text-[#ef4444]' :
-                      selectedEvent.type === 'medium' ? 'bg-[#f59e0b]/20 text-[#fbbf24]' :
-                      'bg-[#1ec9d2]/20 text-[#1ec9d2]'
-                    }`}>
-                      <span className="material-symbols-outlined text-xl">
-                        {selectedEvent.type === 'high' ? 'priority_high' :
-                         selectedEvent.type === 'medium' ? 'remove' : 'low_priority'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 block ${
-                        selectedEvent.type === 'high' ? 'text-[#ef4444]' :
-                        selectedEvent.type === 'medium' ? 'text-[#fbbf24]' :
-                        'text-[#1ec9d2]'
-                      }`}>
-                        {selectedEvent.type === 'high' ? 'High Priority' :
-                         selectedEvent.type === 'medium' ? 'Medium Priority' : 'Low Priority'}
-                      </span>
-                      <h3 className="text-white text-xl font-bold leading-tight">{selectedEvent.title}</h3>
-                    </div>
-                  </div>
-                  <button onClick={() => setIsModalOpen(false)} className="text-[#5f7475] hover:text-white transition-colors">
-                    <span className="material-symbols-outlined">close</span>
-                  </button>
-                </div>
+        <TaskDetailsModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          task={selectedEvent}
+        />
 
-                {/* Modal Body */}
-                <div className="p-6 space-y-6">
-                  {/* Date & Time */}
-                  <div className="flex items-center gap-6 text-[#9eb6b7]">
-                    <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[20px]">calendar_today</span>
-                        <span className="text-sm font-medium text-white">{format(selectedEvent.start, 'EEE, MMM d')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[20px]">schedule</span>
-                        <span className="text-sm font-medium text-white">{selectedEvent.time}</span>
-                    </div>
-                  </div>
+        {/* NLP Task Creation Modals */}
+        <RecurringTaskModal 
+          isOpen={showRecurringModal}
+          onClose={() => setShowRecurringModal(false)}
+          onConfirm={handleConfirm}
+          taskData={parsedData}
+        />
 
-                  {/* Description */}
-                  <div>
-                    <h4 className="text-[10px] font-bold text-[#5f7475] uppercase tracking-widest mb-2">Description</h4>
-                    <p className="text-sm text-[#9eb6b7] leading-relaxed">
-                      Reviewing the Q4 marketing assets and the new landing page wireframes with the product team.
-                    </p>
-                  </div>
-                  
-                  {/* AI Suggestions */}
-                  <div className="bg-[#111717] rounded-xl p-4 border border-[#293738]">
-                    <div className="flex items-center gap-2 mb-3">
-                        <span className="material-symbols-outlined text-primary text-sm">auto_awesome</span>
-                        <span className="text-xs font-bold text-primary uppercase tracking-wider">AI Suggestions</span>
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                            <span className="material-symbols-outlined text-[#5f7475] text-sm mt-0.5">check_circle</span>
-                            <span className="text-sm text-white">Prepare Figma prototype link</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                            <span className="material-symbols-outlined text-[#5f7475] text-sm mt-0.5">check_circle</span>
-                            <span className="text-sm text-white">Send meeting agenda to attendees</span>
-                        </div>
-                    </div>
-                  </div>
-                </div>
+        <RegularTaskModal 
+          isOpen={showRegularModal}
+          onClose={() => setShowRegularModal(false)}
+          onConfirm={handleConfirm}
+          taskData={parsedData}
+        />
 
-                {/* Modal Footer */}
-                <div className="p-4 px-6 border-t border-[#293738] flex justify-between items-center bg-[#161e1f]">
-                  <div className="flex -space-x-2">
-                      <img src="https://i.pravatar.cc/150?u=1" alt="User" className="w-8 h-8 rounded-full border-2 border-[#161e1f]" />
-                      <img src="https://i.pravatar.cc/150?u=2" alt="User" className="w-8 h-8 rounded-full border-2 border-[#161e1f]" />
-                      <div className="w-8 h-8 rounded-full border-2 border-[#161e1f] bg-[#293738] flex items-center justify-center text-xs text-white font-medium">+3</div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={handleDeleteEvent}
-                      className="text-[#ef4444] hover:text-[#f87171] transition-colors p-2 rounded-lg hover:bg-[#ef4444]/10"
-                    >
-                        <span className="material-symbols-outlined text-[20px]">delete</span>
-                    </button>
-                    <button 
-                      onClick={handleEditEvent}
-                      className="text-primary hover:text-primary-dark transition-colors p-2 rounded-lg hover:bg-primary/10"
-                    >
-                        <span className="material-symbols-outlined text-[20px]">edit</span>
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* Create Event Modal */}
+        {/* Create Event Modal (Manual) */}
         <AnimatePresence>
           {isCreateModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)}>

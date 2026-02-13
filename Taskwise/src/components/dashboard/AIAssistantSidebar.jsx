@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import { useUI } from '../../context/UIContext';
 import { aiService } from '../../services/aiService';
 import { useAuth } from '../../context/AuthContext';
@@ -14,43 +15,66 @@ const Typewriter = ({ text }) => {
     setDisplayedText('');
     indexRef.current = 0;
     
+    // Use a faster interval for smoother typing
     const intervalId = setInterval(() => {
+      // Logic changed to use slice instead of charAt to prevent dropped characters
       if (indexRef.current < text.length) {
-        setDisplayedText((prev) => prev + text.charAt(indexRef.current));
         indexRef.current += 1;
+        setDisplayedText(text.slice(0, indexRef.current));
       } else {
         clearInterval(intervalId);
       }
-    }, 20); // Adjusted speed for better reliability
+    }, 10); 
 
     return () => clearInterval(intervalId);
   }, [text]);
 
-  return <span className="whitespace-pre-wrap">{displayedText}</span>;
+  return (
+    <div className="text-sm prose dark:prose-invert max-w-none">
+      <ReactMarkdown 
+        components={{
+          p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+          ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2" {...props} />,
+          ol: ({node, ...props}) => <ol className="list-decimal ml-4 mb-2" {...props} />,
+          li: ({node, ...props}) => <li className="mb-1" {...props} />,
+          a: ({node, ...props}) => <a className="text-primary hover:underline" {...props} />,
+          code: ({node, inline, className, children, ...props}) => {
+            return inline ? 
+              <code className="bg-gray-200 px-1 py-0.5 rounded text-xs font-mono dark:bg-gray-700 dark:text-gray-100" {...props}>{children}</code> :
+              <div className="bg-gray-200 p-2 rounded-lg my-2 overflow-x-auto dark:bg-gray-800 dark:text-gray-100"><code className="text-xs font-mono" {...props}>{children}</code></div>
+          }
+        }}
+      >
+        {displayedText}
+      </ReactMarkdown>
+    </div>
+  );
 };
 
 const PlanMessage = ({ planData, onApprove }) => {
-  const [tasks, setTasks] = useState(planData);
+  const [tasks, setTasks] = useState(planData || []);
   const [isApproved, setIsApproved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Safety check for empty or invalid planData
+  if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+      return (
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-900/30 text-center mt-2">
+              <p className="text-red-800 dark:text-red-200 text-xs">Plan data is unavailable or corrupted.</p>
+          </div>
+      );
+  }
 
   const handleRemoveTask = (indexToRemove) => {
     const taskToRemove = tasks[indexToRemove];
     const dayToRemove = taskToRemove.day;
-
-    // Remove the task
     const newTasks = tasks.filter((_, i) => i !== indexToRemove);
 
-    // Check if any tasks remain for this day
     const hasRemainingTasksForDay = newTasks.some(t => t.day === dayToRemove);
-
     if (!hasRemainingTasksForDay) {
-      // Extract the number from "Day X"
       const match = dayToRemove && dayToRemove.match(/Day (\d+)/i);
       if (match) {
         const removedDayNum = parseInt(match[1]);
-        
-        // Shift subsequent days
         const renumberedTasks = newTasks.map(t => {
           const tMatch = t.day && t.day.match(/Day (\d+)/i);
           if (tMatch) {
@@ -65,7 +89,6 @@ const PlanMessage = ({ planData, onApprove }) => {
         return;
       }
     }
-    
     setTasks(newTasks);
   };
 
@@ -84,86 +107,107 @@ const PlanMessage = ({ planData, onApprove }) => {
       const dayOffset = parseInt(match[1]) - 1;
       const date = new Date(today);
       date.setDate(today.getDate() + dayOffset);
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
     return '';
   };
 
   if (isApproved) {
     return (
-      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-900/30 text-center mt-2 animate-fade-in">
-        <div className="flex flex-col items-center gap-2">
-          <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-3xl">check_circle</span>
-          <p className="text-green-800 dark:text-green-200 font-medium">Plan added to your tasks!</p>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="p-6 bg-green-50/50 dark:bg-green-900/10 rounded-2xl border border-green-200 dark:border-green-500/20 text-center mt-4 backdrop-blur-sm"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
+            <span className="material-symbols-outlined text-green-600 dark:text-green-400 text-2xl">check</span>
+          </div>
+          <div>
+            <h4 className="font-bold text-gray-900 dark:text-white">Plan Approved!</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{tasks.length} tasks added to your schedule.</p>
+          </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="w-full bg-white dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-200 dark:border-border-dark overflow-hidden mt-2 animate-fade-in">
-      <div className="p-4 border-b border-gray-200 dark:border-border-dark bg-gray-50 dark:bg-surface-dark-lighter flex justify-between items-center">
-        <h3 className="font-bold text-gray-900 dark:text-white">Generated Plan</h3>
-        <span className="text-xs text-gray-500 dark:text-text-secondary">{tasks.length} tasks</span>
+    <div className="w-full bg-white dark:bg-surface-dark rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-white/5 overflow-hidden mt-4 animate-fade-in subpixel-antialiased">
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/5 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary text-lg">calendar_month</span>
+            </div>
+            <div>
+                <h3 className="font-bold text-gray-900 dark:text-white text-sm">Action Plan</h3>
+                <p className="text-[10px] text-gray-500 font-medium">{tasks.length} Tasks Generated</p>
+            </div>
+        </div>
       </div>
       
-      <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
+      {/* Table Content */}
+      <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar bg-white dark:bg-surface-dark">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-100 dark:bg-surface-dark-lighter border-b border-gray-200 dark:border-border-dark">
+          <thead className="sticky top-0 z-10 bg-white dark:bg-surface-dark border-b border-gray-100 dark:border-white/5 shadow-sm">
             <tr>
-              <th className="p-3 text-xs font-semibold text-gray-500 dark:text-text-secondary uppercase whitespace-nowrap w-24">Day</th>
-              <th className="p-3 text-xs font-semibold text-gray-500 dark:text-text-secondary uppercase whitespace-nowrap w-20">Time</th>
-              <th className="p-3 text-xs font-semibold text-gray-500 dark:text-text-secondary uppercase w-full">Task</th>
-              <th className="p-3 text-xs font-semibold text-gray-500 dark:text-text-secondary uppercase whitespace-nowrap w-10"></th>
+              <th className="p-3 pl-5 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider w-24">Day</th>
+              <th className="p-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider w-20">Time</th>
+              <th className="p-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Task Details</th>
+              <th className="p-3 pr-5 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider w-10 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-border-dark">
+          <tbody className="divide-y divide-gray-100 dark:divide-white/5">
             {tasks.map((task, index) => {
-              // Check if this is the first task of the day
               const isFirstOfDay = index === 0 || tasks[index - 1].day !== task.day;
               
               return (
-                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-surface-dark-hover transition-colors group">
-                  <td className="p-3 align-top">
+                <tr key={index} className="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                  <td className="p-3 pl-5 align-top">
                     {isFirstOfDay && (
-                      <div className="flex flex-col">
+                      <div className="flex flex-col sticky top-12">
                         <span className="text-xs font-bold text-gray-900 dark:text-white whitespace-nowrap">{task.day || 'Today'}</span>
-                        <span className="text-[10px] text-gray-400 dark:text-text-secondary">{getDateForDay(task.day)}</span>
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono mt-0.5">{getDateForDay(task.day)}</span>
                       </div>
                     )}
                   </td>
-                  <td className="p-3 text-xs text-gray-500 dark:text-text-secondary font-mono whitespace-nowrap align-top pt-3.5">{task.time}</td>
-                  <td className="p-3 text-sm text-gray-900 dark:text-white align-top">
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium">{task.title}</span>
-                      <div className="flex gap-2 items-center">
+                  <td className="p-3 align-top">
+                    <div className="inline-flex items-center justify-center px-2 py-1 rounded bg-gray-100 dark:bg-white/5 text-[10px] font-mono text-gray-600 dark:text-gray-300">
+                      {task.time || 'Anytime'}
+                    </div>
+                  </td>
+                  <td className="p-3 align-top">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-snug">{task.title}</span>
+                      <div className="flex flex-wrap gap-2 items-center">
                         {task.priority && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                            task.priority === 'High' ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' : 
-                            task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400' : 
-                            'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
+                            task.priority === 'High' ? 'bg-red-50 text-red-700 border-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20' : 
+                            task.priority === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20' : 
+                            'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20'
                           }`}>
                             {task.priority}
                           </span>
                         )}
                         {task.duration && (
-                          <span className="text-[10px] text-gray-400 dark:text-text-secondary flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-[10px]">schedule</span>
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]">schedule</span>
                             {task.duration}m
                           </span>
                         )}
                         {task.category && (
-                           <span className="text-[10px] text-gray-400 dark:text-text-secondary border border-gray-200 dark:border-border-dark px-1.5 py-0.5 rounded-full">
+                           <span className="text-[10px] text-gray-400 dark:text-gray-500 px-1.5 py-0.5 border border-gray-100 dark:border-white/10 rounded-full">
                              {task.category}
                            </span>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="p-3 align-top pt-3">
+                  <td className="p-3 pr-5 align-top text-right pt-3">
                     <button 
                       onClick={() => handleRemoveTask(index)}
-                      className="p-1.5 text-gray-400 dark:text-text-secondary hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                       title="Remove Task"
                     >
                       <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -176,23 +220,30 @@ const PlanMessage = ({ planData, onApprove }) => {
         </table>
       </div>
 
-      <div className="p-4 border-t border-gray-200 dark:border-border-dark flex gap-3 justify-end bg-gray-50 dark:bg-surface-dark-lighter">
-        <button
-          className="px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition-colors border border-gray-300 dark:border-border-dark"
-        >
-          Review
-        </button>
+      <div className="p-4 border-t border-gray-100 dark:border-white/5 flex gap-3 justify-end bg-gray-50 dark:bg-black/20">
         <button
           onClick={handleApproveClick}
           disabled={isSubmitting || tasks.length === 0}
-          className="px-4 py-2 text-xs font-medium bg-primary text-background-dark rounded-lg hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold bg-primary text-background-dark rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Processing...' : 'Approve'}
+          {isSubmitting ? (
+              <>
+                 <span className="w-3 h-3 border-2 border-background-dark border-r-transparent rounded-full animate-spin"/>
+                 Adding Tasks...
+              </>
+          ) : (
+              <>
+                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                Approve & Add to Calendar
+              </>
+          )}
         </button>
       </div>
     </div>
   );
 };
+
+import { chatService } from '../../services/chatService';
 
 const AIAssistantSidebar = () => {
   const { isAIAssistantOpen, closeAIAssistant } = useUI();
@@ -202,6 +253,10 @@ const AIAssistantSidebar = () => {
   const [inputValue, setInputValue] = useState('');
   const [view, setView] = useState('chat'); // 'chat' or 'history'
   const [isProcessing, setIsProcessing] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -213,12 +268,54 @@ const AIAssistantSidebar = () => {
     scrollToBottom();
   }, [messages, isProcessing]);
 
-  // Mock History Data
-  const [history] = useState([
-    { id: 1, title: "Python Study Plan", date: "Today, 10:23 AM", preview: "I've drafted a 4-hour Python study block..." },
-    { id: 2, title: "Weekly Review", date: "Yesterday, 4:15 PM", preview: "Here's a summary of your completed tasks..." },
-    { id: 3, title: "Debug React Component", date: "Jan 2, 11:00 AM", preview: "The issue seems to be in the useEffect hook..." },
-  ]);
+  // Load chat history on mount
+  useEffect(() => {
+    if (currentUser?.uid && view === 'history') {
+      const loadHistory = async () => {
+        const chats = await chatService.getUserChats(currentUser.uid);
+        setHistory(chats);
+      };
+      loadHistory();
+    }
+  }, [currentUser, view]);
+
+  // Handle Speech to Text
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Speech recognition is not supported in this browser. Please use Chrome.");
+      return;
+    }
+  
+    if (isListening) {
+      setIsListening(false);
+      return; // The 'end' event will handle cleanup
+    }
+  
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+  
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+  
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue((prev) => prev + (prev ? ' ' : '') + transcript);
+    };
+  
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+  
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+  
+    recognition.start();
+  };
 
   // Auto-resize textarea
   useEffect(() => {
@@ -230,6 +327,7 @@ const AIAssistantSidebar = () => {
 
   const handleNewChat = () => {
     setMessages([]);
+    setCurrentChatId(null);
     setView('chat');
   };
 
@@ -238,11 +336,18 @@ const AIAssistantSidebar = () => {
   };
 
   const handleLoadHistory = (item) => {
-    // In a real app, this would load the actual messages
-    setMessages([
-      { role: 'user', content: `Load chat: ${item.title}` },
-      { role: 'assistant', content: item.preview }
-    ]);
+    // Check if messages array exists and has content
+    if (item.messages && Array.isArray(item.messages) && item.messages.length > 0) {
+      setMessages(item.messages);
+    } else {
+      // Fallback for old/broken records or empty arrays
+      // This prevents the "Greetings" screen from showing up for an empty historical chat
+      setMessages([
+         { role: 'user', content: item.title || "Previous Chat" }, 
+         { role: 'assistant', content: item.preview || "Chat content unavailable." } 
+      ]);
+    }
+    setCurrentChatId(item.id);
     setView('chat');
   };
 
@@ -316,28 +421,55 @@ const AIAssistantSidebar = () => {
     
     const userMsg = inputValue.trim();
     setInputValue('');
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+
+    const newMessages = [...messages, { role: 'user', content: userMsg }];
+    setMessages(newMessages);
     setIsProcessing(true);
 
     try {
+      // 1. Check if we need to create a new chat session in Firestore
+      let chatId = currentChatId;
+      if (!chatId && currentUser?.uid) {
+        chatId = await chatService.createChat(currentUser.uid, userMsg);
+        setCurrentChatId(chatId);
+      }
+
       // Check for plan intent
       const lowerMsg = userMsg.toLowerCase();
       if (lowerMsg.includes('plan') || lowerMsg.includes('schedule') || lowerMsg.includes('routine') || lowerMsg.includes('study')) {
          const plan = await aiService.generatePlan(userMsg);
          if (plan && Array.isArray(plan)) {
-            setMessages(prev => [...prev, { 
-              role: 'assistant', 
+            const planMsg = {
+              role: 'assistant',
               type: 'plan',
-              content: plan 
-            }]);
+              content: plan
+            };
+            const updatedMessages = [...newMessages, planMsg];
+            setMessages(updatedMessages);
+            
+            // Persist valid response
+            if (chatId && currentUser?.uid) {
+              await chatService.saveMessages(currentUser.uid, chatId, updatedMessages);
+            }
          } else {
             // Fallback to normal chat if plan generation fails or returns text
             const response = await aiService.chat(userMsg, messages);
-            setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+            const updatedMessages = [...newMessages, { role: 'assistant', content: response }];
+            setMessages(updatedMessages);
+            if (chatId && currentUser?.uid) {
+               await chatService.saveMessages(currentUser.uid, chatId, updatedMessages);
+            }
          }
       } else {
          const response = await aiService.chat(userMsg, messages);
-         setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+         const updatedMessages = [...newMessages, { role: 'assistant', content: response }];
+         setMessages(updatedMessages);
+         
+         // Persist normal chat
+         if (chatId && currentUser?.uid) {
+           await chatService.saveMessages(currentUser.uid, chatId, updatedMessages);
+         }
       }
     } catch (error) {
       console.error(error);
@@ -598,8 +730,11 @@ const AIAssistantSidebar = () => {
                 {/* Actions */}
                 <div className="flex items-center gap-1 shrink-0 mb-0.5">
                    {/* Mic Button */}
-                   <button className="p-2 text-gray-400 hover:text-primary dark:hover:text-primary transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-white/5">
-                    <span className="material-symbols-outlined text-[20px]">mic</span>
+                   <button 
+                    onClick={handleVoiceInput}
+                    className={`p-2 transition-colors rounded-full ${isListening ? 'text-red-500 animate-pulse bg-red-100 dark:bg-red-900/20' : 'text-gray-400 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-white/5'}`}
+                   >
+                    <span className="material-symbols-outlined text-[20px]">{isListening ? 'mic_off' : 'mic'}</span>
                   </button>
                   {/* Send Button */}
                   <button 

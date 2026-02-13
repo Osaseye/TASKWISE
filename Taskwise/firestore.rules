@@ -15,6 +15,11 @@ service cloud.firestore {
     // Users collection
     match /users/{userId} {
       allow read, write: if isOwner(userId);
+      
+      // Allow access to chats subcollection for owner
+      match /chats/{chatId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Tasks collection

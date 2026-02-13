@@ -1,109 +1,86 @@
-// Together AI Configuration
-const TOGETHER_API_URL = "https://api.together.xyz/v1/chat/completions";
-const TOGETHER_MODEL = "mistralai/Mixtral-8x7B-Instruct-v0.1";
+import { ai } from "../firebase";
+import { getGenerativeModel } from "firebase/ai";
 
-/**
- * Helper to call Together AI API
- */
-async function callTogetherAI(prompt, systemContext = "", maxTokens = 2500) {
-  const apiKey = import.meta.env.VITE_TOGETHER_API_KEY;
-  
-  if (!apiKey) {
-    console.warn("VITE_TOGETHER_API_KEY is missing.");
-    return null;
+// Initialize the model
+const MODEL_NAME = "gemini-2.5-flash";
+
+// Model for structured JSON output
+const jsonModel = getGenerativeModel(ai, { 
+  model: MODEL_NAME,
+  generationConfig: {
+    responseMimeType: "application/json"
   }
+});
 
-  try {
-    const response = await fetch(TOGETHER_API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: TOGETHER_MODEL,
-        messages: [
-          { role: "system", content: systemContext },
-          { role: "user", content: prompt }
-        ],
-        max_tokens: maxTokens,
-        temperature: 0.7,
-      }),
-    });
+// Model for chat (text output)
+const chatModel = getGenerativeModel(ai, { 
+  model: MODEL_NAME,
+});
 
-    if (!response.ok) {
-      throw new Error(`Together AI API Error: ${response.status} ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    return result.choices[0]?.message?.content?.trim();
-  } catch (error) {
-    console.error("Together AI API call failed:", error);
-    return null;
-  }
-}
-
-/**
- * AI Service for processing natural language commands and generating insights.
- * Uses Together AI (Mixtral-8x7B) with In-Context Learning.
- */
 export const aiService = {
   /**
    * Parse a natural language command to create a task
    */
   parseTaskCommand: async (command) => {
-    const systemContext = `
-You are a smart task assistant. Your job is to extract structured task details from natural language commands.
-Return ONLY a valid JSON object. Do not include any explanations or markdown formatting.
+    try {
+      const prompt = `
+      You are a smart task assistant. Extract structured task details from the following command.
+      Return ONLY a valid JSON object.
 
-Examples:
-Input: "Remind me to submit report tomorrow at 5pm priority high"
-Output: {"title": "Submit report", "priority": "High", "dueDate": "2026-01-05T17:00:00.000Z", "recurrence": null, "category": "Work"}
+      Command: "${command}"
+      
+      Current Date: ${new Date().toISOString()}
 
-Input: "Gym every morning"
-Output: {"title": "Gym", "priority": "Medium", "dueDate": "2026-01-04T08:00:00.000Z", "recurrence": {"type": "daily", "interval": 1}, "category": "Health"}
-
-Current Date: ${new Date().toISOString()}
-`;
-
-    const response = await callTogetherAI(command, systemContext);
-
-    if (response) {
-      try {
-        // Clean up potential markdown code blocks if the model adds them
-        const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(jsonStr);
-      } catch (e) {
-        console.error("Failed to parse Together AI response as JSON", e);
+      Output Schema:
+      {
+        "title": "string",
+        "priority": "High" | "Medium" | "Low",
+        "startDate": "YYYY-MM-DD",
+        "startTime": "HH:MM" (24h format) or null,
+        "recurrence": { 
+          "type": "daily" | "weekly" | "monthly" | "yearly", 
+          "interval": number,
+          "endDate": "YYYY-MM-DD" or null
+        } or null,
+        "category": "Work" | "Personal" | "Health" | "Finance" | "Education"
       }
-    }
 
-    // Fallback Logic
-    return aiService.parseTaskCommandFallback(command);
+      Rules:
+      - If no time is mentioned, set "startTime" to "09:00".
+      - "Until [date]" sets the "recurrence.endDate".
+      - "Every 2 days" -> interval: 2.
+      `;
+
+      const result = await jsonModel.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      return JSON.parse(text);
+    } catch (error) {
+      console.error("Vertex AI Parse Error:", error);
+      return aiService.parseTaskCommandFallback(command);
+    }
   },
 
-
   parseTaskCommandFallback: async (command) => {
+    // Fallback logic for when AI fails or is offline
     await new Promise(resolve => setTimeout(resolve, 500));
     const lowerCmd = command.toLowerCase();
     const task = {
       title: command,
-      priority: 'medium',
+      priority: 'Medium',
       dueDate: null,
       recurrence: null,
       category: 'Personal'
     };
 
-    // Priority
-    if (lowerCmd.includes('urgent') || lowerCmd.includes('important') || lowerCmd.includes('high')) task.priority = 'High';
+    // Simple keyword extraction
+    if (lowerCmd.includes('urgent') || lowerCmd.includes('high')) task.priority = 'High';
     else if (lowerCmd.includes('low')) task.priority = 'Low';
 
-    // Recurrence
-    if (lowerCmd.includes('every day') || lowerCmd.includes('daily')) task.recurrence = { type: 'daily', interval: 1 };
-    else if (lowerCmd.includes('every week') || lowerCmd.includes('weekly')) task.recurrence = { type: 'weekly', interval: 1 };
-    else if (lowerCmd.includes('every month') || lowerCmd.includes('monthly')) task.recurrence = { type: 'monthly', interval: 1 };
+    if (lowerCmd.includes('daily')) task.recurrence = { type: 'daily', interval: 1 };
+    else if (lowerCmd.includes('weekly')) task.recurrence = { type: 'weekly', interval: 1 };
 
-    // Date
     const today = new Date();
     if (lowerCmd.includes('tomorrow')) {
       const d = new Date(today); d.setDate(d.getDate() + 1);
@@ -119,115 +96,160 @@ Current Date: ${new Date().toISOString()}
    * Generate insights based on completed tasks
    */
   generateInsights: async (tasks) => {
-    if (tasks.length > 0) {
+    if (!tasks || tasks.length === 0) {
+      return [
+        "You're doing great! Keep up the momentum.",
+        "Try to tackle high priority tasks first thing in the morning.",
+        "Remember to take breaks between deep work sessions."
+      ];
+    }
+
+    try {
       const tasksSummary = tasks.slice(0, 20).map(t => 
         `- ${t.title} (${t.completed ? 'Completed' : 'Pending'}, Priority: ${t.priority})`
       ).join('\n');
 
-      const systemContext = `
-You are a productivity expert. Analyze the following tasks and provide 3 short, encouraging productivity insights or tips.
-Return ONLY a valid JSON array of strings.
+      const prompt = `
+      You are a productivity expert. Analyze the following tasks and provide 3 short, encouraging productivity insights or tips.
+      Return ONLY a valid JSON array of strings.
 
-Tasks:
-${tasksSummary}
-`;
+      Tasks:
+      ${tasksSummary}
+      `;
+
+      const result = await jsonModel.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
       
-      const response = await callTogetherAI("Generate insights", systemContext);
-      
-      if (response) {
-        try {
-          const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
-          return JSON.parse(jsonStr);
-        } catch (e) {
-          console.error("Failed to parse Together AI insights", e);
-        }
-      }
+      return JSON.parse(text);
+    } catch (error) {
+      console.error("Vertex AI Insights Error:", error);
+      return [
+        "Focus on your high priority tasks seamlessly.",
+        "Consistency is key to long-term success.",
+        "Review your completed tasks to celebrate progress."
+      ];
     }
-
-    return [
-      "You're doing great! Keep up the momentum.",
-      "Try to tackle high priority tasks first thing in the morning.",
-      "Remember to take breaks between deep work sessions."
-    ];
   },
 
   /**
    * Chat with the AI Assistant
    */
   chat: async (message, history = []) => {
-    // Construct context from history
-    const conversationHistory = history.map(h => `${h.role === 'user' ? 'User' : 'Assistant'}: ${h.content}`).join('\n');
-    
-    const systemContext = `
-You are TaskWise AI, a productivity assistant created by Segun.
+    try {
+      // Convert history to Gemini format
+      // Note: Gemini expects 'user' and 'model' roles.
+      const chatHistory = history.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      }));
 
-Guidelines:
-1. **No Repetition**: Do NOT introduce yourself ("I'm TaskWise...") unless explicitly asked "Who are you?".
-2. **Conciseness**: Be brief and direct. Avoid fluff.
-3. **Formatting**: Use Markdown (bullet points, bold text) to structure your responses.
-4. **Capabilities**: You HAVE a GUI. You can generate interactive plans, tasks, and schedules. If a user asks for a plan, you generate it (the system handles the UI). Do NOT say you "don't have a GUI".
-5. **Spelling**: Ensure perfect spelling.
+      const chatSession = chatModel.startChat({
+        history: chatHistory,
+        generationConfig: {
+          maxOutputTokens: 1000,
+        },
+        systemInstruction: {
+          role: "system",
+          parts: [{
+            text: `
+        You are TaskWise AI, a productivity assistant created by Segun.
 
-Current Date: ${new Date().toDateString()}
+        Guidelines:
+        1. **No Repetition**: Do NOT introduce yourself ("I'm TaskWise...") unless explicitly asked "Who are you?".
+        2. **Conciseness**: Be brief and direct. Avoid fluff.
+        3. **Formatting**: Use Markdown (bullet points, bold text) to structure your responses.
+        4. **Capabilities**: You HAVE a GUI. You can generate interactive plans, tasks, and schedules. If a user asks for a plan, you generate it (the system handles the UI). Do NOT say you "don't have a GUI".
+        5. **Spelling**: Ensure perfect spelling.
 
-Conversation History:
-${conversationHistory}
-`;
+        Current Date: ${new Date().toDateString()}
+        `
+          }]
+        }
+      });
 
-    const response = await callTogetherAI(message, systemContext);
-    
-    if (response) {
-      return response;
+      const result = await chatSession.sendMessage(message);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error("Vertex AI Chat Error:", error);
+      return aiService.chatFallback(message);
     }
+  },
 
-    return aiService.chatFallback(message);
+  chatFallback: (message) => {
+    const lower = message.toLowerCase();
+    if (lower.includes('plan')) return "I can help you plan! (Offline Mode)";
+    return "I'm having trouble connecting to the AI service. Please check your connection.";
   },
 
   /**
    * Generate a structured plan (list of tasks) from a user request
    */
   generatePlan: async (request) => {
-    const systemContext = `
-You are a scheduler API. Your ONLY job is to return a valid JSON array.
-Do NOT return any conversational text. Do NOT use markdown code blocks. Just the raw JSON array.
+    try {
+      const prompt = `
+      You are a scheduler API. Create a detailed plan based on the request.
+      Return ONLY a valid JSON array of task objects.
 
-Task Object Structure:
-{
-  "day": "string" (e.g., "Day 1", "Monday", "2024-01-01"),
-  "title": "string",
-  "time": "HH:MM" (24h format) or "Anytime",
-  "duration": number (minutes),
-  "priority": "High" | "Medium" | "Low",
-  "category": "string"
-}
+      Request: "${request}"
 
-Generate the FULL plan for the requested duration. Do not truncate.
-If the user asks for 2 weeks, generate 14 days of tasks.
-Ensure "day" fields are consistent (e.g., "Day 1", "Day 2").
-
-Example Input: "Plan a morning routine"
-Example Output:
-[{"day":"Day 1","title":"Wake up","time":"07:00","duration":15,"priority":"High","category":"Health"},{"day":"Day 1","title":"Exercise","time":"07:15","duration":30,"priority":"Medium","category":"Health"}]
-`;
-
-    const response = await callTogetherAI(request, systemContext, 3000);
-
-    if (response) {
-      try {
-        const jsonStr = response.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(jsonStr);
-      } catch (e) {
-        console.error("Failed to parse plan generation response", e);
+      Output Schema (Array of):
+      {
+        "day": "string" (e.g., "Day 1", "Monday"),
+        "title": "string",
+        "time": "HH:MM" (24h) or "Anytime",
+        "duration": number (minutes),
+        "priority": "High" | "Medium" | "Low",
+        "category": "string"
       }
+      `;
+
+      const result = await jsonModel.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      return JSON.parse(text);
+    } catch (error) {
+      console.error("Vertex AI Plan Error:", error);
+      return null;
     }
-    return null;
   },
 
-  chatFallback: (message) => {
-    const lower = message.toLowerCase();
-    if (lower.includes('plan') || lower.includes('schedule')) return "I can help you plan! Try saying 'Plan my study schedule for tomorrow'. (Offline Mode)";
-    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) return "Hello! I'm your TaskWise assistant. How can I help you be productive today? (Offline Mode)";
-    if (lower.includes('help')) return "I can help you create tasks, manage your schedule, and provide productivity tips. (Offline Mode)";
-    return "I'm having trouble connecting to the cloud, but I'm still here! Try adding a task manually or check your internet connection.";
+  /**
+   * Generate a specific insight for a single task based on similar tasks
+   */
+  generateTaskSpecificInsight: async (currentTask, historicalTasks) => {
+    try {
+      const historySummary = historicalTasks
+        .filter(t => t.id !== currentTask.id) // Exclude current
+        .slice(0, 15)
+        .map(t => `- ${t.title} (${t.completed ? 'Done' : 'Pending'}, Cat: ${t.category || 'General'})`)
+        .join('\n');
+
+      const prompt = `
+      You are a productivity coach. Provide 1 short, actionable, and personalized insight for this specific task.
+      Consider the user's task history to see if they often procrastinate on similar tasks or complete them quickly.
+      
+      Current Task:
+      Title: "${currentTask.title}"
+      Category: "${currentTask.category}"
+      Priority: "${currentTask.priority}"
+
+      User History (Recent 15 tasks):
+      ${historySummary}
+
+      Return ONLY a JSON object: { "insight": "string" }
+      Keep the insight under 20 words.
+      `;
+
+      const result = await jsonModel.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      return JSON.parse(text).insight;
+    } catch (error) {
+      console.error("Task Insight Error:", error);
+      return "Break this task into smaller sub-tasks to maintain momentum.";
+    }
   }
 };

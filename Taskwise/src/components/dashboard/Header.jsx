@@ -3,7 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { useUser } from '../../context/UserContext';
-import TaskConfirmationModal from './TaskConfirmationModal';
+import { aiService } from '../../services/aiService';
+import RecurringTaskModal from './RecurringTaskModal';
+import RegularTaskModal from './RegularTaskModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Header = () => {
@@ -13,16 +15,20 @@ const Header = () => {
   const { userProfile } = useUser();
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [showRegularModal, setShowRegularModal] = useState(false);
   const [parsedData, setParsedData] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingText, setLoadingText] = useState('Processing...');
+  const [isListening, setIsListening] = useState(false);
 
   const pendingTasksCount = tasks.filter(t => !t.completed).length;
   const unreadNotificationsCount = notifications.filter(n => !n.read).length;
   
   const displayName = userProfile?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
   const greetingName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+
+  // ... (keeping existing useEffect for loading text)
 
   useEffect(() => {
     let interval;
@@ -38,33 +44,79 @@ const Header = () => {
     return () => clearInterval(interval);
   }, [isProcessing]);
 
+  // Handle Speech to Text
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Speech recognition is not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue((prev) => prev + (prev ? ' ' : '') + transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   const handleNLP = async () => {
     if (!inputValue.trim()) return;
 
     setIsProcessing(true);
     
-    // Simulate AI processing delay
-    setTimeout(() => {
-      // Mock parsing logic - in a real app this would call an API
-      const mockParsed = {
+    try {
+      // Call actual AI Service
+      const parsed = await aiService.parseTaskCommand(inputValue);
+      
+      if (parsed) {
+        setParsedData(parsed);
+        setIsProcessing(false);
+        
+        if (parsed.recurrence && parsed.recurrence.type && parsed.recurrence.type !== 'none') {
+          setShowRecurringModal(true);
+        } else {
+          setShowRegularModal(true);
+        }
+      } else {
+        // Fallback for empty/invalid response
+        throw new Error("Failed to parse");
+      }
+    } catch (error) {
+      console.error("NLP Error:", error);
+      // Fallback manual entry
+      setParsedData({
         title: inputValue,
-        time: '9:00 AM', // Default or extracted
         priority: 'Medium',
-        category: 'General'
-      };
-      
-      // Simple keyword extraction for demo
-      if (inputValue.toLowerCase().includes('urgent') || inputValue.toLowerCase().includes('important')) {
-        mockParsed.priority = 'High';
-      }
-      if (inputValue.toLowerCase().includes('meeting')) {
-        mockParsed.category = 'Work';
-      }
-      
-      setParsedData(mockParsed);
+        category: 'General',
+        startDate: new Date().toISOString().split('T')[0],
+        startTime: ''
+      });
       setIsProcessing(false);
-      setShowModal(true);
-    }, 1500);
+      setShowRegularModal(true);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -75,7 +127,8 @@ const Header = () => {
 
   const handleConfirm = (data) => {
     addTask(data);
-    setShowModal(false);
+    setShowRecurringModal(false);
+    setShowRegularModal(false);
     setInputValue('');
     setParsedData(null);
   };
@@ -177,10 +230,16 @@ const Header = () => {
           />
           <div className="pr-2 flex items-center gap-1">
             <button 
-              className="text-text-secondary hover:text-white p-1.5 rounded-lg transition-colors"
+              onClick={handleVoiceInput}
+              disabled={isProcessing}
+              className={`p-1.5 rounded-lg transition-colors ${
+                isListening 
+                  ? 'text-red-500 bg-red-100 dark:bg-red-900/20 animate-pulse' 
+                  : 'text-text-secondary hover:text-white hover:bg-[#293738]'
+              }`}
               title="Voice Input"
             >
-              <span className="material-symbols-outlined text-[20px]">mic</span>
+              <span className="material-symbols-outlined text-[20px]">{isListening ? 'mic_off' : 'mic'}</span>
             </button>
             <button 
               onClick={handleNLP}
@@ -197,11 +256,18 @@ const Header = () => {
         </div>
       </div>
 
-      <TaskConfirmationModal 
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
+      <RecurringTaskModal 
+        isOpen={showRecurringModal}
+        onClose={() => setShowRecurringModal(false)}
         onConfirm={handleConfirm}
-        initialData={parsedData}
+        taskData={parsedData}
+      />
+
+      <RegularTaskModal 
+        isOpen={showRegularModal}
+        onClose={() => setShowRegularModal(false)}
+        onConfirm={handleConfirm}
+        taskData={parsedData}
       />
     </header>
   );

@@ -1,7 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTasks } from '../../context/TaskContext';
+import { aiService } from '../../services/aiService';
 
 const TaskDetailsModal = ({ isOpen, onClose, task }) => {
+  const { tasks } = useTasks();
+  const [insight, setInsight] = useState('');
+  const [loadingInsight, setLoadingInsight] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchInsight = async () => {
+      if (isOpen && task) {
+        setLoadingInsight(true);
+        // Pass all tasks as history context
+        const result = await aiService.generateTaskSpecificInsight(task, tasks);
+        if (isMounted) {
+          setInsight(result);
+          setLoadingInsight(false);
+        }
+      } else {
+        setInsight('');
+      }
+    };
+
+    fetchInsight();
+
+    return () => { isMounted = false; };
+  }, [isOpen, task]); // Removed 'tasks' dependency to prevent loop/refetching on every global task change
+
   if (!task) return null;
 
   return (
@@ -25,7 +53,9 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-white leading-tight">{task.title}</h3>
-                    <p className="text-text-secondary text-xs mt-1">Created today</p>
+                    <p className="text-text-secondary text-xs mt-1">
+                       {task.createdAt?.toDate ? `Created ${task.createdAt.toDate().toLocaleDateString()}` : 'Task Details'}
+                    </p>
                   </div>
                 </div>
                 <button onClick={onClose} className="text-text-secondary hover:text-white transition-colors">
@@ -34,12 +64,37 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
               </div>
 
               <div className="space-y-4 py-4">
+                
+                {/* AI Insight Section */}
+                <div className="bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl border border-primary/20 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-2 opacity-10">
+                    <span className="material-symbols-outlined text-4xl text-primary">auto_awesome</span>
+                  </div>
+                  <div className="flex items-start gap-3 relative z-10">
+                    <span className="material-symbols-outlined text-primary text-[20px] mt-0.5">lightbulb</span>
+                    <div>
+                      <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">AI Insight</p>
+                      {loadingInsight ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                          <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                          <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-200 leading-snug">
+                          {insight}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-[#111717] p-3 rounded-xl border border-[#293738]">
                     <p className="text-xs text-text-secondary mb-1">Time</p>
                     <div className="flex items-center gap-2 text-white text-sm font-medium">
                       <span className="material-symbols-outlined text-[16px] text-primary">schedule</span>
-                      {task.time || 'All Day'}
+                      {task.startTime || task.time || 'Anytime'}
                     </div>
                   </div>
                   <div className="bg-[#111717] p-3 rounded-xl border border-[#293738]">
@@ -63,12 +118,14 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
                   </div>
                 </div>
 
-                <div className="bg-[#111717] p-3 rounded-xl border border-[#293738]">
-                  <p className="text-xs text-text-secondary mb-2">Description</p>
-                  <p className="text-white text-sm leading-relaxed opacity-80">
-                    {task.description || "No additional details provided for this task."}
-                  </p>
-                </div>
+                {task.description && (
+                  <div className="bg-[#111717] p-3 rounded-xl border border-[#293738]">
+                    <p className="text-xs text-text-secondary mb-2">Description</p>
+                    <p className="text-white text-sm leading-relaxed opacity-80 whitespace-pre-wrap">
+                      {task.description}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 mt-2 pt-4 border-t border-[#293738]">

@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
+import { getAI, VertexAIBackend } from "firebase/ai";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,4 +20,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const analytics = getAnalytics(app);
 
-export { app, auth, db, analytics };
+// Initialize AI with Vertex AI backend
+const ai = getAI(app, { backend: new VertexAIBackend() });
+
+export { app, auth, db, analytics, ai };

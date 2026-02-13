@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTasks } from '../context/TaskContext';
+import { useAuth } from '../context/AuthContext';
+import { useUser } from '../context/UserContext';
 import { aiService } from '../services/aiService';
 import { isToday, isTomorrow, isThisWeek, isPast, parseISO } from 'date-fns';
 import Sidebar from '../components/dashboard/Sidebar';
@@ -10,16 +12,26 @@ import CreateTaskModal from '../components/dashboard/CreateTaskModal';
 import TaskDetailsModal from '../components/dashboard/TaskDetailsModal';
 import DeleteConfirmationModal from '../components/dashboard/DeleteConfirmationModal';
 import QuickActionModal from '../components/dashboard/QuickActionModal';
+import RecurringTaskModal from '../components/dashboard/RecurringTaskModal';
+import RegularTaskModal from '../components/dashboard/RegularTaskModal';
 
 const MyTasksPage = () => {
   // Use global task context
   const { tasks, addTask, toggleTask, deleteTask, updateTask } = useTasks();
+  const { currentUser } = useAuth();
+  const { userProfile } = useUser();
 
   const [newTaskInput, setNewTaskInput] = useState('');
-  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [loadingText, setLoadingText] = useState('Processing...');
+  const [isListening, setIsListening] = useState(false);
 
   // Modal & Action States
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [showRegularModal, setShowRegularModal] = useState(false);
+  const [parsedData, setParsedData] = useState(null);
+  
   const [editingTask, setEditingTask] = useState(null);
   const [deletingTask, setDeletingTask] = useState(null);
   const [quickAction, setQuickAction] = useState(null);
@@ -39,34 +51,101 @@ const MyTasksPage = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // Loading Text Animation
+  useEffect(() => {
+    let interval;
+    if (isProcessing) {
+      const texts = ['Analyzing request...', 'Extracting details...', 'Scheduling task...'];
+      let i = 0;
+      setLoadingText(texts[0]);
+      interval = setInterval(() => {
+        i = (i + 1) % texts.length;
+        setLoadingText(texts[i]);
+      }, 500);
+    }
+    return () => clearInterval(interval);
+  }, [isProcessing]);
+
+  // Handle Speech to Text
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Speech recognition is not supported in this browser. Please use Chrome.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setNewTaskInput((prev) => prev + (prev ? ' ' : '') + transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   const handleAddTaskInput = async () => {
     if (!newTaskInput.trim()) return;
 
-    setIsAiProcessing(true);
+    setIsProcessing(true);
     
     try {
-      const parsedTask = await aiService.parseTaskCommand(newTaskInput);
-      setEditingTask(parsedTask);
+      const parsed = await aiService.parseTaskCommand(newTaskInput);
+      setParsedData(parsed);
+      
+      if (parsed.recurrence && parsed.recurrence.type && parsed.recurrence.type !== 'none') {
+        setShowRecurringModal(true);
+      } else {
+        setShowRegularModal(true);
+      }
+      setNewTaskInput('');
     } catch (error) {
       console.error("AI parsing failed", error);
-    } finally {
-      setIsAiProcessing(false);
+      // Fallback to simple create logic if AI fails
+      setParsedData({ title: newTaskInput });
+      setShowRegularModal(true);
       setNewTaskInput('');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleSaveTask = (taskData) => {
-    if (editingTask && editingTask.id) {
-      // Update existing
-      updateTask(editingTask.id, taskData);
-      setEditingTask(null);
-    } else {
-      // Create new
+  const handleSaveVerifiedTask = (taskData) => {
       addTask({
         ...taskData,
         completed: false
       });
-      setEditingTask(null);
+      setShowRegularModal(false);
+      setShowRecurringModal(false);
+      setParsedData(null);
+  };
+
+  const handleSaveSimpleTask = (taskData) => {
+    if (editingTask && editingTask.id) {
+       updateTask(editingTask.id, taskData);
+       setEditingTask(null);
+    } else {
+      addTask({ ...taskData, completed: false });
       setIsCreateModalOpen(false);
     }
   };
@@ -130,6 +209,12 @@ const MyTasksPage = () => {
 
   const processedTasks = getProcessedTasks();
 
+  const displayName = userProfile?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
+  const greetingName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+
+  // Derive unique categories from tasks
+  const uniqueCategories = ['All', ...new Set(tasks.map(t => t.category || 'General'))].sort();
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -150,7 +235,7 @@ const MyTasksPage = () => {
               <div className="flex flex-col gap-1">
                 <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">My Tasks</h1>
                 <p className="text-text-secondary text-sm md:text-base">
-                  Good morning, Alex. You have <span className="text-primary font-bold">{tasks.filter(t => !t.completed).length} pending tasks</span> today.
+                  Good morning, {greetingName}. You have <span className="text-primary font-bold">{tasks.filter(t => !t.completed).length} pending tasks</span> today.
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -173,81 +258,129 @@ const MyTasksPage = () => {
             {/* AI Command Input */}
             <div className="relative group/composer z-10">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/30 to-purple-500/30 rounded-xl blur opacity-30 group-hover/composer:opacity-75 transition duration-500"></div>
-              <div className="relative flex items-center bg-surface-hover rounded-lg p-2 shadow-lg">
+              <div className="relative flex items-center bg-[#1c2a2b] rounded-xl p-2 shadow-xl border border-[#3d5152]/50">
                 <div className="pl-4 pr-2 text-text-secondary">
-                  {isAiProcessing ? (
+                  {isProcessing ? (
                     <span className="material-symbols-outlined animate-spin text-primary">autorenew</span>
                   ) : (
                     <span className="material-symbols-outlined text-primary">auto_awesome</span>
                   )}
                 </div>
                 <input 
-                  className="flex-1 bg-transparent border-none text-white placeholder:text-text-secondary focus:ring-0 text-base py-3 outline-none" 
-                  placeholder={isAiProcessing ? "AI is processing your request..." : "Ask AI to create a task (e.g., 'Remind me to call John tomorrow at 2pm')"}
+                  className="flex-1 bg-transparent border-none text-white placeholder:text-text-secondary/50 focus:ring-0 text-base py-3 outline-none font-medium" 
+                  placeholder={isProcessing ? loadingText : "Ask AI to create a task (or tap mic)..."}
                   type="text"
                   value={newTaskInput}
                   onChange={(e) => setNewTaskInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAddTaskInput()}
-                  disabled={isAiProcessing}
+                  disabled={isProcessing}
+                  autoFocus
                 />
-                <div className="flex items-center gap-2 pr-2">
+                <div className="flex items-center gap-1 pr-1">
+                  {/* Microphone Button */}
+                  <button 
+                    onClick={handleVoiceInput}
+                    className={`p-2.5 rounded-lg transition-all duration-300 ${
+                       isListening 
+                       ? 'bg-red-500/20 text-red-400 animate-pulse shadow-[0_0_10px_rgba(248,113,113,0.3)]' 
+                       : 'text-text-secondary hover:text-white hover:bg-white/5'
+                    }`}
+                    title="Voice Input"
+                  >
+                    <span className="material-symbols-outlined text-[22px]">
+                      {isListening ? 'mic' : 'mic_none'}
+                    </span>
+                  </button>
+
+                  <div className="w-px h-6 bg-[#3d5152] mx-1"></div>
+
                   <button 
                     onClick={handleAddTaskInput}
-                    disabled={!newTaskInput.trim() || isAiProcessing}
-                    className="p-2 text-primary hover:text-white hover:bg-primary/20 transition-colors rounded-md disabled:opacity-50 disabled:cursor-not-allowed" 
+                    disabled={!newTaskInput.trim() || isProcessing}
+                    className="p-2.5 bg-primary/10 text-primary hover:bg-primary hover:text-background-dark transition-all rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary/10 disabled:hover:text-primary" 
                     title="Send to AI"
                   >
-                    <span className="material-symbols-outlined text-[20px]">send</span>
+                    <span className="material-symbols-outlined text-[22px] filled">arrow_upward</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Filters (Chips) */}
-            <div className="flex flex-wrap items-center gap-3">
-              <button 
-                onClick={() => setFilterType(prev => prev === 'all' ? 'active' : prev === 'active' ? 'completed' : 'all')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all group ${filterType !== 'all' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-surface-hover border-transparent text-text-secondary hover:text-white'}`}
-              >
-                <span className="text-xs font-medium">Status: {filterType.charAt(0).toUpperCase() + filterType.slice(1)}</span>
-                <span className="material-symbols-outlined text-[16px]">filter_list</span>
-              </button>
+            {/* Improved Filters Toolbar */}
+            <div className="bg-[#1c2a2b]/50 backdrop-blur-sm p-3 rounded-xl border border-[#3d5152]/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                
+                {/* Status Toggle */}
+                <div className="flex bg-[#111717] rounded-lg p-1 border border-[#3d5152]">
+                  {['all', 'active', 'completed'].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setFilterType(type)}
+                      className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all capitalize ${
+                        filterType === type 
+                          ? 'bg-[#293738] text-white shadow-sm' 
+                          : 'text-text-secondary hover:text-white'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
 
-              <button 
-                onClick={() => setSortType(prev => prev === 'default' ? 'priority' : prev === 'priority' ? 'time' : 'default')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all group ${sortType !== 'default' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-surface-hover border-transparent text-text-secondary hover:text-white'}`}
-              >
-                <span className="text-xs font-medium">Sort: {sortType.charAt(0).toUpperCase() + sortType.slice(1)}</span>
-                <span className="material-symbols-outlined text-[16px]">sort</span>
-              </button>
+                <div className="w-px h-6 bg-[#3d5152] hidden md:block"></div>
 
-              <button 
-                onClick={() => setCategoryFilter(prev => prev === 'All' ? 'Work' : prev === 'Work' ? 'Personal' : 'All')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all group ${categoryFilter !== 'All' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-surface-hover border-transparent text-text-secondary hover:text-white'}`}
-              >
-                <span className="text-xs font-medium">Category: {categoryFilter}</span>
-                <span className="material-symbols-outlined text-[16px]">folder</span>
-              </button>
+                {/* Date Filter Dropdown Style */}
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="bg-[#111717] text-text-secondary text-xs rounded-lg px-3 py-2 border border-[#3d5152] focus:border-primary focus:outline-none cursor-pointer hover:border-primary/50 transition-colors appearance-none min-w-[100px]"
+                >
+                  <option value="all">Any Date</option>
+                  <option value="today">Today</option>
+                  <option value="tomorrow">Tomorrow</option>
+                  <option value="week">This Week</option>
+                  <option value="overdue">Overdue</option>
+                </select>
 
-              <button 
-                onClick={() => setDateFilter(prev => prev === 'all' ? 'today' : prev === 'today' ? 'tomorrow' : prev === 'tomorrow' ? 'week' : prev === 'week' ? 'overdue' : 'all')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all group ${dateFilter !== 'all' ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-surface-hover border-transparent text-text-secondary hover:text-white'}`}
-              >
-                <span className="text-xs font-medium">Date: {dateFilter.charAt(0).toUpperCase() + dateFilter.slice(1)}</span>
-                <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-              </button>
-              
-              {(filterType !== 'all' || sortType !== 'default' || categoryFilter !== 'All' || dateFilter !== 'all') && (
-                <>
-                  <div className="h-4 w-px bg-[#3d5152] mx-1"></div>
+                {/* Category Filter Dropdown Style */}
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="bg-[#111717] text-text-secondary text-xs rounded-lg px-3 py-2 border border-[#3d5152] focus:border-primary focus:outline-none cursor-pointer hover:border-primary/50 transition-colors appearance-none min-w-[100px]"
+                >
+                  {uniqueCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
+                  ))}
+                </select>
+
+              </div>
+
+              {/* Sort/Clear Actions */}
+              <div className="flex items-center gap-3">
+                 <button 
+                  onClick={() => setSortType(prev => prev === 'default' ? 'priority' : prev === 'priority' ? 'time' : 'default')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all ${
+                    sortType !== 'default' 
+                     ? 'bg-primary/20 border-primary/50 text-white' 
+                     : 'bg-transparent border-[#3d5152] text-text-secondary hover:border-white/30'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">sort</span>
+                  <span className="text-xs font-medium">
+                     {sortType === 'default' ? 'Default' : sortType === 'priority' ? 'By Priority' : 'By Time'}
+                  </span>
+                </button>
+
+                {(filterType !== 'all' || sortType !== 'default' || categoryFilter !== 'All' || dateFilter !== 'all') && (
                   <button 
                     onClick={() => { setFilterType('all'); setSortType('default'); setCategoryFilter('All'); setDateFilter('all'); }}
-                    className="text-xs font-medium text-primary hover:text-white transition-colors"
+                    className="flex items-center gap-1 text-xs font-bold text-red-400 hover:text-red-300 transition-colors bg-red-400/10 px-3 py-1.5 rounded-lg border border-red-400/20"
                   >
-                    Clear Filters
+                    <span className="material-symbols-outlined text-[14px]">close</span>
+                    Clear
                   </button>
-                </>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Task List */}
@@ -385,18 +518,36 @@ const MyTasksPage = () => {
       <AIAssistantButton />
 
       {/* Modals */}
+      
+      {/* 1. Manual Creation Modal (via Top Button) */}
       <CreateTaskModal 
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onConfirm={handleSaveTask}
+        onConfirm={handleSaveSimpleTask}
         initialData={null}
       />
 
-      {/* Edit/AI Confirmation Modal */}
+      {/* 2. AI Verified Regular Task Modal */}
+      <RegularTaskModal 
+        isOpen={showRegularModal}
+        onClose={() => setShowRegularModal(false)}
+        onConfirm={handleSaveVerifiedTask}
+        initialData={parsedData}
+      />
+
+      {/* 3. AI Verified Recurring Task Modal */}
+      <RecurringTaskModal 
+        isOpen={showRecurringModal}
+        onClose={() => setShowRecurringModal(false)}
+        onConfirm={handleSaveVerifiedTask}
+        initialData={parsedData}
+      />
+
+      {/* 4. Edit Existing Task Modal */}
       <CreateTaskModal 
         isOpen={!!editingTask}
         onClose={() => setEditingTask(null)}
-        onConfirm={handleSaveTask}
+        onConfirm={handleSaveSimpleTask}
         initialData={editingTask}
       />
 
