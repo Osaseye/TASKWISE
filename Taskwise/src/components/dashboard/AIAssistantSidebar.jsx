@@ -612,15 +612,15 @@ const AIAssistantSidebar = () => {
                       
                       {/* Quick Starters */}
                       <div className="flex flex-wrap justify-center gap-2 w-full max-w-sm mt-6">
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <button onClick={() => setInputValue('Plan my day')} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300">
                           <span className="material-symbols-outlined text-[18px]">calendar_today</span>
                           Plan my day
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <button onClick={() => setInputValue('Create a study plan for me')} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300">
                           <span className="material-symbols-outlined text-[18px]">school</span>
                           Study plan
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <button onClick={() => setInputValue('Help me brainstorm ideas')} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300">
                           <span className="material-symbols-outlined text-[18px]">lightbulb</span>
                           Brainstorm
                         </button>

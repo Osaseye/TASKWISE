@@ -1,56 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useForm } from 'react-hook-form';
 
 const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => {
-  const [taskData, setTaskData] = useState({
-    title: '',
-    date: '',
-    time: '',
-    priority: 'Medium',
-    category: 'General',
-    recurrence: 'none'
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      title: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '',
+      priority: 'Medium',
+      category: 'General',
+      recurrence: 'none',
+    },
   });
+
+  const priority = watch('priority');
 
   useEffect(() => {
     if (isOpen && initialData) {
-      setTaskData({
-        ...initialData,
-        recurrence: initialData.recurrence?.type || 'none'
+      reset({
+        title: initialData.title || '',
+        date: initialData.date || initialData.startDate || new Date().toISOString().split('T')[0],
+        time: initialData.time || initialData.startTime || '',
+        priority: initialData.priority || 'Medium',
+        category: initialData.category || 'General',
+        recurrence: initialData.recurrence?.type || 'none',
       });
     } else if (isOpen && !initialData) {
-      setTaskData({
+      reset({
         title: '',
-        date: new Date().toISOString().split('T')[0], // Default to today
+        date: new Date().toISOString().split('T')[0],
         time: '',
         priority: 'Medium',
         category: 'General',
-        recurrence: 'none'
+        recurrence: 'none',
       });
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, reset]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setTaskData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const onSubmit = (data) => {
     const submissionData = {
-      ...taskData,
-      recurrence: taskData.recurrence === 'none' ? null : { type: taskData.recurrence, interval: 1 }
+      ...data,
+      recurrence: data.recurrence === 'none' ? null : { type: data.recurrence, interval: 1 },
     };
     onConfirm(submissionData);
-    if (!initialData) {
-      setTaskData({
-        title: '',
-        date: '',
-        time: '',
-        priority: 'Medium',
-        category: 'General',
-        recurrence: 'none'
-      });
-    }
   };
 
   return (
@@ -68,23 +68,21 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
                 <h3 className="text-lg font-bold text-white">
                   {initialData && !initialData.id ? 'Confirm Task Details' : initialData ? 'Edit Task' : 'Create New Task'}
                 </h3>
-                <button onClick={onClose} className="text-text-secondary hover:text-white transition-colors">
+                <button type="button" onClick={onClose} className="text-text-secondary hover:text-white transition-colors">
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-text-secondary mb-1.5">Task Name</label>
                   <input
                     type="text"
-                    name="title"
-                    value={taskData.title}
-                    onChange={handleChange}
+                    {...register('title', { required: true })}
                     placeholder="e.g. Review Q3 Report"
                     className="w-full bg-[#111717] border border-[#293738] rounded-lg px-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
-                    required
                   />
+                  {errors.title && <span className="text-red-500 text-xs">Title is required</span>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -94,9 +92,7 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
                       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">calendar_today</span>
                       <input
                         type="date"
-                        name="date"
-                        value={taskData.date || ''}
-                        onChange={handleChange}
+                        {...register('date')}
                         className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors [color-scheme:dark]"
                       />
                     </div>
@@ -107,9 +103,7 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
                       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">schedule</span>
                       <input
                         type="text"
-                        name="time"
-                        value={taskData.time}
-                        onChange={handleChange}
+                        {...register('time')}
                         placeholder="e.g. 2:00 PM"
                         className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
                       />
@@ -124,9 +118,7 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
                       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">folder</span>
                       <input
                         type="text"
-                        name="category"
-                        value={taskData.category}
-                        onChange={handleChange}
+                        {...register('category')}
                         placeholder="e.g. Work"
                         className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors"
                       />
@@ -137,9 +129,7 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[16px]">repeat</span>
                       <select
-                        name="recurrence"
-                        value={taskData.recurrence}
-                        onChange={handleChange}
+                        {...register('recurrence')}
                         className="w-full bg-[#111717] border border-[#293738] rounded-lg pl-9 pr-3 py-2 text-white text-sm focus:border-primary/50 focus:outline-none transition-colors appearance-none"
                       >
                         <option value="none">None</option>
@@ -159,9 +149,9 @@ const CreateTaskModal = ({ isOpen, onClose, onConfirm, initialData = null }) => 
                       <button
                         key={p}
                         type="button"
-                        onClick={() => setTaskData(prev => ({ ...prev, priority: p }))}
+                        onClick={() => setValue('priority', p)}
                         className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-all ${
-                          taskData.priority === p
+                          priority === p
                             ? 'bg-primary/10 border-primary text-primary'
                             : 'bg-[#111717] border-[#293738] text-text-secondary hover:border-[#3d5152]'
                         }`}

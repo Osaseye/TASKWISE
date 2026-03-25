@@ -24,12 +24,12 @@ service cloud.firestore {
 
     // Tasks collection
     match /tasks/{taskId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid;
     }
 
     // Notifications collection
     match /notifications/{notificationId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid;
     }
   }
 }

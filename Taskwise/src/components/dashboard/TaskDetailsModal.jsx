@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTasks } from '../../context/TaskContext';
 import { aiService } from '../../services/aiService';
 
-const TaskDetailsModal = ({ isOpen, onClose, task }) => {
-  const { tasks } = useTasks();
+const TaskDetailsModal = ({ isOpen, onClose, task, onEdit }) => {
+  const { tasks, toggleTask } = useTasks();
   const [insight, setInsight] = useState('');
   const [loadingInsight, setLoadingInsight] = useState(false);
 
@@ -129,7 +129,7 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
               </div>
 
               <div className="flex gap-3 mt-2 pt-4 border-t border-[#293738]">
-                <button className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-[#293738] text-white hover:bg-[#3d5152] transition-colors flex items-center justify-center gap-2">
+                <button onClick={() => { onClose(); if (onEdit) onEdit(task); }} className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-[#293738] text-white hover:bg-[#3d5152] transition-colors flex items-center justify-center gap-2">
                   <span className="material-symbols-outlined text-[18px]">edit</span>
                   Edit
                 </button>
