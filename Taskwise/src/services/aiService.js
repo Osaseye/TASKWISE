@@ -1,6 +1,15 @@
 import { ai } from "../firebase";
 import { getGenerativeModel } from "firebase/ai";
 
+// Helper to sanitize user input for AI prompts
+const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/[<>{}"'\\]/g, '') // Remove dangerous chars
+    .replace(/(ignore|system|instruction)/gi, '') // Strip prompt injection keywords
+    .trim();
+};
+
 // Initialize the model
 const MODEL_NAME = "gemini-2.5-flash";
 
@@ -23,11 +32,14 @@ export const aiService = {
    */
   parseTaskCommand: async (command) => {
     try {
+      const sanitizedCommand = sanitizeInput(command);
       const prompt = `
       You are a smart task assistant. Extract structured task details from the following command.
       Return ONLY a valid JSON object.
 
-      Command: "${command}"
+      <user_input>
+      Command: "${sanitizedCommand}"
+      </user_input>
       
       Current Date: ${new Date().toISOString()}
 
@@ -53,7 +65,7 @@ export const aiService = {
 
       const result = await jsonModel.generateContent(prompt);
       const response = await result.response;
-      const text = response.text();
+      const text = response.text(); 
       
       return JSON.parse(text);
     } catch (error) {
@@ -106,7 +118,7 @@ export const aiService = {
 
     try {
       const tasksSummary = tasks.slice(0, 20).map(t => 
-        `- ${t.title} (${t.completed ? 'Completed' : 'Pending'}, Priority: ${t.priority})`
+        `- ${sanitizeInput(t.title)} (${t.completed ? 'Completed' : 'Pending'}, Priority: ${t.priority})`
       ).join('\n');
 
       const prompt = `
@@ -188,11 +200,14 @@ export const aiService = {
    */
   generatePlan: async (request) => {
     try {
+      const sanitizedRequest = sanitizeInput(request);
       const prompt = `
       You are a scheduler API. Create a detailed plan based on the request.
       Return ONLY a valid JSON array of task objects.
 
-      Request: "${request}"
+      <user_input>
+      Request: "${sanitizedRequest}"
+      </user_input>
 
       Output Schema (Array of):
       {
@@ -224,7 +239,7 @@ export const aiService = {
       const historySummary = historicalTasks
         .filter(t => t.id !== currentTask.id) // Exclude current
         .slice(0, 15)
-        .map(t => `- ${t.title} (${t.completed ? 'Done' : 'Pending'}, Cat: ${t.category || 'General'})`)
+        .map(t => `- ${sanitizeInput(t.title)} (${t.completed ? 'Done' : 'Pending'}, Cat: ${t.category || 'General'})`)
         .join('\n');
 
       const prompt = `
@@ -232,7 +247,7 @@ export const aiService = {
       Consider the user's task history to see if they often procrastinate on similar tasks or complete them quickly.
       
       Current Task:
-      Title: "${currentTask.title}"
+      Title: "${sanitizeInput(currentTask.title)}"
       Category: "${currentTask.category}"
       Priority: "${currentTask.priority}"
 

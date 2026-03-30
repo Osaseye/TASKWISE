@@ -8,7 +8,11 @@ import {
   updateEmail,
   updatePassword,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendEmailVerification,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  deleteUser
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import LoadingScreen from '../components/LoadingScreen';
@@ -23,8 +27,10 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  function signup(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
+  async function signup(email, password) {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(userCredential.user);
+    return userCredential;
   }
 
   function login(email, password) {
@@ -52,8 +58,13 @@ export const AuthProvider = ({ children }) => {
     return updatePassword(currentUser, password);
   }
 
-  function deleteAccount() {
-    return currentUser.delete();
+  async function deleteAccount(password) {
+    if (!currentUser) return;
+    if (password && currentUser.email) {
+      const credential = EmailAuthProvider.credential(currentUser.email, password);
+      await reauthenticateWithCredential(currentUser, credential);
+    }
+    return deleteUser(currentUser);
   }
 
   useEffect(() => {
